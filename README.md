@@ -2,7 +2,7 @@
 Sooooo this is a little project who want use to develop discord bot 🤑🤑🤑🤑🤑🤑
 
 **REQUIRED:** 
-1. node.js and download dotenv, nodemon
+1. node.js and download discord.js, dotenv, nodemon
 2. Bot token
 3. that all
    
