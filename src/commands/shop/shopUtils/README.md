@@ -1,2 +1,2 @@
-# BEFORE DO ANYTHING
-this is a folder contain items, if you delete it, it gonna disappeared
+DO NOT DELETED!!!!!
+(Only add/edit item, if you want to change folder name make sure you have change it on shop.js)

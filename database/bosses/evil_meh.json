@@ -1,0 +1,17 @@
+{
+  "id": "evil_meh",
+  "name": "Evil Meh",
+  "title": "Senior Software Engineer from Hell",
+  "personality": "Sarcastic, passive-aggressive, chronically online coder",
+  "hp": 75,
+  "stamina": 80,
+  "behavior": "technical",
+  "aggression": 0.7,
+  "description": "A chaotic evil developer who fights with bugs, hacks, and corporate jargon. Will delete your save file and call it a feature.",
+  "training_data": {
+    "total_matches": 0,
+    "win_rate": 0,
+    "qTable": {},
+    "learned_lessons": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "default",
+  "name": "Generic NPC",
+  "title": "Average Enjoyer",
+  "personality": "Mid, forgettable, but tries really hard",
+  "hp": 70,
+  "stamina": 60,
+  "behavior": "random",
+  "aggression": 0.5,
+  "description": "Your average skill-issue mob who somehow ended up in the boss roster. Copes with memes and ratio energy.",
+  "training_data": {
+    "total_matches": 0,
+    "win_rate": 0,
+    "qTable": {},
+    "learned_lessons": []
+  }
+}

@@ -1,0 +1,7 @@
+module.exports = {
+    id: 'darksteel',
+    name: 'Darksteel',
+    sell: 1300,
+    desc: 'The shadows so dark, like black hole',
+    type: 'sellable',
+};

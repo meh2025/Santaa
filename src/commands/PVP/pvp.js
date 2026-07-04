@@ -1,5 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { attemptRun, executeAttack, applyLosses, awardExperience } = require('./pvpCore'); // core logic
+const { attemptRun, executeAttack, applyLosses, awardExperience, recordMatch } = require('./pvpCore'); // core logic
+const { decideBotAction, applyTurn } = require('./botPvpLogic');
+const { getBossProfiles, getBossProfile, createBossTrainer } = require('./bosses');
 const rpgmanager = require('../../../database/rpgmanager');
 
 /**
@@ -18,7 +20,14 @@ module.exports = {
   category: 'gnr',
   async execute(message) {
     const challenger = message.author;
+    const args = message.content.slice(1).trim().split(/\s+/);
+    const isBossMode = args.includes('boss') || args.includes('bot');
     const targetUser = message.mentions.users.first();
+
+    if (isBossMode) {
+      return this.executeBossFight(message, challenger, args);
+    }
+
     if (!targetUser) {
       return message.reply('You must mention a user to challenge. Example: `Zpvp @username`');
     }
@@ -43,6 +52,14 @@ module.exports = {
     const acceptCollector = challengeMsg.createMessageComponentCollector({ filter: acceptFilter, time: 60000, max: 1 });
 
     acceptCollector.on('collect', async i => {
+      try {
+        if (!i.deferred && !i.replied) {
+          await i.deferUpdate();
+        }
+      } catch (error) {
+        console.warn('[pvp] Failed to defer accept interaction:', error);
+      }
+
       // Disable accept button
       const disabledRow = new ActionRowBuilder().addComponents(ButtonBuilder.from(acceptBtn).setDisabled(true));
       await i.update({ embeds: [challengeEmbed.setDescription(`${challenger} vs ${targetUser} — duel started!`)], components: [disabledRow] });
@@ -69,6 +86,14 @@ module.exports = {
       const chooseCollector = chooseMsg.createMessageComponentCollector({ filter: chooseFilter, time: 60000, max: 1 });
 
       chooseCollector.on('collect', async choiceInt => {
+        try {
+          if (!choiceInt.deferred && !choiceInt.replied) {
+            await choiceInt.deferUpdate();
+          }
+        } catch (error) {
+          console.warn('[pvp] Failed to defer attacker selection interaction:', error);
+        }
+
         // Disable choice buttons
         const disabledChoose = new ActionRowBuilder().addComponents(
           ButtonBuilder.from(challengerFirstBtn).setDisabled(true),
@@ -132,8 +157,10 @@ module.exports = {
                components: []
              });
              
-             await applyLosses(loserId, message.channel);
+             const lossData = await applyLosses(loserId, message.channel);
              const expResult = await awardExperience(winnerId);
+             const moneyLost = lossData?.lossAmount ?? 0;
+             await recordMatch(winnerId, loserId, 20, moneyLost);
              const winMsg = expResult.levelUp 
                ? `🎉 <@${winnerId}> won by exhaustion and LEVELED UP to ${expResult.newLevel}!` 
                : `🏆 <@${winnerId}> won by exhaustion!`;
@@ -148,7 +175,16 @@ module.exports = {
           const actionCollector = combatMsg.createMessageComponentCollector({ filter: actionFilter, time: 60000, max: 1 });
 
           const collected = await new Promise(resolve => {
-            actionCollector.on('collect', i => resolve(i));
+            actionCollector.on('collect', async i => {
+              try {
+                if (!i.deferred && !i.replied) {
+                  await i.deferUpdate();
+                }
+              } catch (error) {
+                console.warn('[pvp] Failed to defer interaction:', error);
+              }
+              resolve(i);
+            });
             actionCollector.on('end', (coll, reason) => {
               if (reason === 'time' && coll.size === 0) resolve(null);
             });
@@ -198,9 +234,11 @@ module.exports = {
                  embeds: [new EmbedBuilder().setTitle('K.O.!').setDescription(`<@${targetId}> was defeated!`).setColor('#ff0000')],
                  components: []
                });
-               await applyLosses(targetId, message.channel);
+               const lossData2 = await applyLosses(targetId, message.channel);
+               const moneyLost2 = lossData2?.lossAmount ?? 0;
                
                const expResult = await awardExperience(winnerId);
+               await recordMatch(winnerId, targetId, 20, moneyLost2);
                const winMsg = expResult.levelUp 
                  ? `🎉 <@${winnerId}> won and LEVELED UP to ${expResult.newLevel}!` 
                  : `🏆 <@${winnerId}> won the duel!`;
@@ -245,4 +283,163 @@ module.exports = {
       }
     });
   },
+
+  async executeBossFight(message, challenger, args = []) {
+    const bossProfiles = getBossProfiles();
+    const requestedBoss = args.find(arg => !['pvp', 'boss', 'bot', 'random'].includes(arg.toLowerCase()));
+    const bossProfile = requestedBoss
+      ? getBossProfile(requestedBoss.toLowerCase())
+      : bossProfiles[Math.floor(Math.random() * bossProfiles.length)];
+    const bossName = bossProfile.name;
+    const trainer = createBossTrainer(bossProfile.id, challenger.id);
+    const playerStats = await rpgmanager.getStats(challenger.id);
+    let player = {
+      id: challenger.id,
+      hp: Math.max(30, playerStats.health),
+      stamina: Math.max(24, playerStats.stamina),
+      shield: 0
+    };
+    let boss = {
+      hp: bossProfile.hp,
+      stamina: bossProfile.stamina,
+      shield: 0
+    };
+
+    const getStatBar = (val, max = 100) => {
+      const filled = Math.round((val / max) * 10);
+      return `[${'█'.repeat(filled)}${'░'.repeat(10 - filled)}] ${val}/${max}`;
+    };
+
+    const createCombatEmbed = async (turnLabel = 'You', lastAction = '') => {
+      return new EmbedBuilder()
+        .setTitle('⚔️ Boss Duel')
+        .setDescription(`**Opponent:** ${bossName} (${bossProfile.title})\n${bossProfile.description}\n\n**Current Turn:** ${turnLabel}\n\n` +
+          `**You**\nHP: ${getStatBar(player.hp)}\nST: ${getStatBar(player.stamina)}\n\n` +
+          `**${bossName}**\nHP: ${getStatBar(boss.hp)}\nST: ${getStatBar(boss.stamina)}\n\n` +
+          (lastAction ? `*${lastAction}*` : 'Choose your action:'))
+        .setColor('#F59E0B');
+    };
+
+    const attackBtn = new ButtonBuilder()
+      .setCustomId('pvp_attack')
+      .setStyle(ButtonStyle.Danger)
+      .setEmoji('⚔️');
+    const heavyAttackBtn = new ButtonBuilder()
+      .setCustomId('pvp_heavy_attack')
+      .setStyle(ButtonStyle.Danger)
+      .setEmoji('💥');
+    const defendBtn = new ButtonBuilder()
+      .setCustomId('pvp_defend')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('🛡️');
+    const recoverBtn = new ButtonBuilder()
+      .setCustomId('pvp_recover')
+      .setStyle(ButtonStyle.Success)
+      .setEmoji('💊');
+    const runBtn = new ButtonBuilder()
+      .setCustomId('pvp_run')
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji('🏃');
+    const actionRow = new ActionRowBuilder().addComponents(attackBtn, heavyAttackBtn, defendBtn, recoverBtn, runBtn);
+
+    let combatMsg = await message.channel.send({
+      embeds: [await createCombatEmbed('You')],
+      components: [actionRow]
+    });
+
+    let battleOver = false;
+    let turn = 1;
+    const combatLog = [];
+
+    while (!battleOver && turn <= 8) {
+      const actionFilter = i => i.customId.startsWith('pvp_') && i.user.id === challenger.id;
+      const actionCollector = combatMsg.createMessageComponentCollector({ filter: actionFilter, time: 60000, max: 1 });
+
+      const collected = await new Promise(resolve => {
+        actionCollector.on('collect', async i => {
+          try {
+            if (!i.deferred && !i.replied) {
+              await i.deferUpdate();
+            }
+          } catch (error) {
+            console.warn('[pvp] Failed to defer interaction:', error);
+          }
+          resolve(i);
+        });
+        actionCollector.on('end', (coll, reason) => {
+          if (reason === 'time' && coll.size === 0) resolve(null);
+        });
+      });
+
+      if (!collected) {
+        await combatMsg.edit({
+          embeds: [new EmbedBuilder().setTitle('Duel Timeout').setDescription('No action was taken in time. Duel cancelled.').setColor('#999999')],
+          components: []
+        });
+        break;
+      }
+
+      if (collected.customId === 'pvp_run') {
+        await combatMsg.edit({
+          embeds: [new EmbedBuilder().setTitle('Escape Successful').setDescription('You managed to flee the boss fight!').setColor('#0EA5E9')],
+          components: []
+        });
+        battleOver = true;
+        break;
+      }
+
+      if (player.stamina <= 0) {
+        await combatMsg.edit({
+          embeds: [new EmbedBuilder().setTitle('Exhausted!').setDescription('You are too exhausted to continue.').setColor('#DC2626')],
+          components: []
+        });
+        battleOver = true;
+        break;
+      }
+
+      const playerAction = collected.customId.replace('pvp_', '');
+      combatLog.push(playerAction);
+      const botAction = decideBotAction({ turn, player, boss, bossProfile, trainer });
+      const result = applyTurn({ playerAction, botAction, player, boss });
+      player = result.player;
+      boss = result.boss;
+
+      const { generateDialogue } = require('./bosses/bossDialogue');
+      const bossQuote = generateDialogue(botAction, { turn, player, boss }, bossProfile);
+
+      const lastAction = `You chose **${playerAction}** while **${bossName}** chose to **${botAction}**.\n\n💬 **${bossName}**: "${bossQuote}"`;
+      const nextTurnLabel = 'You';
+
+      await combatMsg.edit({
+        embeds: [await createCombatEmbed(nextTurnLabel, lastAction)],
+        components: [actionRow]
+      });
+
+      if (player.hp <= 0) {
+        trainer.update('loss', botAction, -80, 'loss');
+        await message.channel.send(`💀 ${challenger} was defeated by **${bossName}**.`);
+        battleOver = true;
+      } else if (boss.hp <= 0) {
+        const reward = 120 + (bossProfile.behavior === 'aggressive' ? 30 : 0);
+        trainer.update('win', botAction, 100, 'win');
+        await message.channel.send(`🎉 ${challenger} defeated **${bossName}** and earned **$${reward}**!`);
+        const dbManager = message.client.db;
+        await dbManager.addMoney(challenger.id, reward, { trackEarning: true });
+        await rpgmanager.recordPvpResult(challenger.id, 'boss', 20, 0);
+        battleOver = true;
+      }
+
+      turn += 1;
+    }
+
+    if (!battleOver) {
+      const final = player.hp > boss.hp ? 'You barely outlasted the boss.' : 'The boss outlasted you.';
+      await message.channel.send(`🏁 ${final}`);
+    }
+
+    // After battle ends, let trainer learn from combatLog
+    if (combatLog.length > 0 && trainer.analyzeMatch) {
+      trainer.analyzeMatch(combatLog);
+    }
+  }
 };

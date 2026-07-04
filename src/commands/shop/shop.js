@@ -8,7 +8,7 @@ const rpgmanager = require('../../../database/rpgmanager');
 
 module.exports = {
     name: 'shop',
-    description: 'Shopping stuff at Gepora or Kimori\'s Food Shop',
+    description: 'Shopping stuff at Gepora Online Store or Kimori\'s Food Shop',
     category: 'gnr',
     async execute(message, args) {
         // Main shop selection embed
@@ -20,7 +20,7 @@ module.exports = {
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('shop_gepora')
-                .setLabel('Gepora')
+                .setLabel('Gepora Online Store')
                 .setStyle(ButtonStyle.Primary)
                 .setEmoji('🛍️'),
             new ButtonBuilder()
@@ -45,7 +45,7 @@ module.exports = {
                     const userDb = await dbmanager.getUser(i.user.id);
                     if (response.shopType === 'gepora') { // change this to your custom gepora shop folder in shoputils
                         if (userDb.bank < item.cost) {
-                            return i.reply({ content: 'You do not have enough Bank Balance to buy this!', ephemeral: true });
+                            return i.reply({ content: 'You do not have enough Bank money to buy this!', ephemeral: true });
                         }
                         await dbmanager.removeBank(i.user.id, item.cost);
                     } else if (response.shopType === 'kimori') { // change this to your custom food shop folder in shoputils
@@ -67,8 +67,8 @@ module.exports = {
 
                 if (i.customId === 'shop_gepora') { // change this to your custom gepora shop folder in shoputils
                     shopType = 'gepora';
-                    shopTitle = '**Gepora Shop**';
-                    shopDesc = 'Welcome to Gepora! We sell a variety of items (except food). Uses **Bank Balance** as currency.';
+                    shopTitle = '**Gepora Online Store**';
+                    shopDesc = 'Welcome to Gepora Online Store! We sell a variety of items (except food). Uses **Bank money** as currency.';
                     currencyName = 'bank';
                     currencyEmoji = '🏦';
                 } else if (i.customId === 'shop_kimori') {

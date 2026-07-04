@@ -1,16 +1,20 @@
 {
   "name": "santaa",
-  "version": "0.1.0",
-  "description": "Literally just a santa",
+  "version": "1.0.0",
+  "description": "Santaa so broke that he need to fishing for money",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js", 
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js",
+    "test": "node --test"
   },
-  "keywords": ["discord", "bot", "santa"],
+  "keywords": [
+    "discord",
+    "bot",
+    "santa"
+  ],
   "author": "meh2025",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "discord.js": "^14.26.4",

@@ -20,6 +20,24 @@ const loadItems = () => {
             }
         }
     }
+    const targets = [
+        path.join(__dirname, '..', '..', 'minigames', 'Mining', 'minerals'),
+        path.join(__dirname, '..', '..', 'minigames', 'Fishing', 'fish')
+    ]
+
+    for (const targetPath of targets) {
+        if (!fs.existsSync(targetPath)) continue;
+        const rarityDirs = fs.readdirSync(targetPath).filter(d => fs.lstatSync(path.join(targetPath, d)).isDirectory());
+        for (const rd of rarityDirs) {
+            const rdPath = path.join(targetPath, rd);
+            const files = fs.readdirSync(rdPath).filter(f => f.endsWith('.js'));
+
+            for (const file of files) {
+                const item = require(path.join(rdPath, file));
+                if (item && item.id) allItems.set(item.id, item);
+            }
+        }
+    }
     return allItems;
 };
 
@@ -39,18 +57,27 @@ async function getTotalStats(userId) {
     let totalDefense = baseStats.defense || 0;
     let equippedItemName = "None";
 
-    if (baseStats.equipped_item_id) {
-        const eqItem = allItemsCache.get(baseStats.equipped_item_id);
-        if (eqItem) {
-            equippedItemName = eqItem.name;
-            if (eqItem.stats) {
-                if (eqItem.stats.health) maxHealth += eqItem.stats.health;
-                if (eqItem.stats.stamina) maxStamina += eqItem.stats.stamina;
-                if (eqItem.stats.attack) totalAttack += eqItem.stats.attack;
-                if (eqItem.stats.defense) totalDefense += eqItem.stats.defense;
-            }
+    // Support multiple equipped items (stored as JSON array in equipped_items)
+    let equippedItemsArr = [];
+    if (baseStats.equipped_items) {
+        try { equippedItemsArr = JSON.parse(baseStats.equipped_items); } catch (e) { equippedItemsArr = []; }
+    }
+    // Backwards-compat: include single equipped_item_id if present
+    if (baseStats.equipped_item_id) equippedItemsArr.push(baseStats.equipped_item_id);
+
+    const equippedNames = [];
+    for (const eqId of equippedItemsArr) {
+        const eqItem = allItemsCache.get(eqId);
+        if (!eqItem) continue;
+        equippedNames.push(eqItem.name);
+        if (eqItem.stats) {
+            if (eqItem.stats.health) maxHealth += eqItem.stats.health;
+            if (eqItem.stats.stamina) maxStamina += eqItem.stats.stamina;
+            if (eqItem.stats.attack) totalAttack += eqItem.stats.attack;
+            if (eqItem.stats.defense) totalDefense += eqItem.stats.defense;
         }
     }
+    if (equippedNames.length > 0) equippedItemName = equippedNames.join(', ');
 
     return {
         ...baseStats,
@@ -58,7 +85,8 @@ async function getTotalStats(userId) {
         maxStamina,
         totalAttack,
         totalDefense,
-        equippedItemName
+        equippedItemName,
+        equippedItemsArr
     };
 }
 

@@ -1,6 +1,10 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 require('dotenv').config();
 const { getMenuRow, getPaginationRow, getOptions } = require('../Utils/NavigateManager');
+// Changelog.json
+const fs = require('fs').promises;
+const path = require('path');
+
 
 module.exports = {
     name: 'help',
@@ -13,10 +17,28 @@ module.exports = {
         const { commands } = message.client;
         const isOwner = message.author.id === process.env.OWNER_ID;
 
+        // Changelog.js (show version bot feature will be remove in future)
+        let updateValue = '```Cannot load changelog list```';
+        try {
+            const changelogPath = path.join(__dirname, '../../../changelog.json');
+            const data = await fs.readFile(changelogPath, 'utf-8');
+            const changelogData = JSON.parse(data);
+
+            if (Array.isArray(changelogData)) {
+                let updateContent = changelogData.map(line => `- ${line}`).join('\n');
+
+                if (updateContent.length > 1000) {
+                    updateContent = updateContent.slice(0, 980) + '\n... and some other updates.';
+                }
+                updateValue = `\`\`\`md\n${updateContent}\n\`\`\``;
+            }
+        } catch (error) {
+            console.error('Error loading CHANGELOG.json:', error);
+        }
+
         // Filter commands based on category and ownership
         const getFilteredCmds = (cat) => {
             return commands.filter(cmd => {
-                // Always hide owner commands from non-owners
                 if (!isOwner && cmd.category === 'owner') return false;
                 if (cat === 'all') return true;
                 return cmd.category === cat;
@@ -28,8 +50,9 @@ module.exports = {
             .setTitle('**BOT INFORMATION**')
             .addFields(
                 { name: 'Version:', value: `${process.env.BOT_VER} ${process.env.TYPE}`, inline: true },
-                { name: 'Update:', value: '```- Add PVP (with user) and Level stats\n- Improve inventory command\n- Fix bug```', inline: false }
+                { name: 'Update:', value: updateValue, inline: false }
             )
+            .setFooter({ text: 'New: Zguessmeme, Zolympac, and boss PvP mode' });
 
         // Menu row — show Owner option only for bot owner
         const menuOptions = isOwner
@@ -68,7 +91,7 @@ module.exports = {
             // dont care ts
             if (currentCategory === 'gau3') {
                 return i.update({
-                    embeds: [new EmbedBuilder().setTitle('❓ Hidden Area').setDescription('The void is here')],
+                    embeds: [new EmbedBuilder().setTitle('❓ Hidden Area').setDescription('You bastard! You just into owner\'s bot bedroom 🤨')],
                     components: [menuRow]
                 });
             }

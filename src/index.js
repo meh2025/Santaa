@@ -3,7 +3,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const {Client, IntentsBitField, Collection} = require('discord.js');
+const { Client, IntentsBitField, Collection } = require('discord.js');
 const dbmanager = require('../database/dbmanager'); // Import the database manager module
 
 // some flag u shouldnt care fr
@@ -39,34 +39,35 @@ function getFilesRecursive(dir) {
     });
     return results;
 }
+const commandFolders = ['commands', 'minigames', 'memes']; // path all command in src/
 
-const cmdPath = path.join(__dirname, 'commands'); // Path to the commands directory
+commandFolders.forEach(folder => {
+    const folderPath = path.join(__dirname, folder);
 
-if (fs.existsSync(cmdPath)) {
-    const cmdFiles = getFilesRecursive(cmdPath); // Get all command files recursively @
+    if (fs.existsSync(folderPath)) {
+        const cmdFiles = getFilesRecursive(folderPath);
 
-    // console.log(`--- Loading commands from ${cmdPath} ---`);
+        for (const filePath of cmdFiles) {
+            try {
+                // Delete cache to allow hot-reloading of commands without restarting the bot
+                delete require.cache[require.resolve(filePath)];
 
-    for (const filePath of cmdFiles) {
-        // Delete cache to allow hot-reloading of commands without restarting the bot
-        delete require.cache[require.resolve(filePath)];
-        
-        const cmd = require(filePath);
-        
-        if ('name' in cmd && 'description' in cmd) {
-            client.commands.set(cmd.name, cmd);
-            // Log the loaded command (debug) @
-            // console.log(`Loaded: ${cmd.name} (${path.relative(cmdPath, filePath)})`);
-        } else {
-            // console.warn(`Skipped: ${filePath} (Missing name or description)`); // debug @
+                const cmd = require(filePath);
+
+                if (cmd && typeof cmd === 'object' && 'name' in cmd && 'description' in cmd && typeof cmd.execute === 'function') {
+                    client.commands.set(cmd.name, cmd);
+                    // console.log(`Loaded from ${folder}: ${cmd.name}`); // debug @
+                } else {
+                    // console.warn(`Skipped: ${filePath} (Missing name, description, or execute handler)`); // debug @
+                }
+            } catch (error) {
+                console.error(`Failed to load command file ${filePath}:`, error);
+            }
         }
+    } else {
+        console.error(`Error: ${folder} directory not found!`);
     }
-    // Log total commands loaded (debug) @
-    // console.log(`Total commands loaded: ${client.commands.size}`);
-
-} else { // Handle the case where the commands directory does not exist
-    console.error("Error: Commands directory not found!");
-}
+});
 
 // Listen for messages
 client.on('messageCreate', (message) => {
@@ -89,17 +90,12 @@ client.on('messageCreate', (message) => {
     }
 });
 
-// Client running
-client.on('clientReady', () => {
-    // console.log(`Logged in as ${client.user.tag}!`); // literally debug too @
-});
-
 // Connecting database
 async function connectData() {
     try {
         await dbmanager.init();
         client.db = dbmanager; // Attach the database manager to the client for easy access in commands
-        
+
         const rpgmanager = require('../database/rpgmanager');
         await rpgmanager.init();
         client.rpg = rpgmanager;

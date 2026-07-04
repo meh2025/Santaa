@@ -1,11 +1,13 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const getOptions = () => {
+    // Help.js
     const options = [
-        { label: 'All', value: 'all' },
+        { label: 'All', value: 'all', description: 'View all available commands' },
         { label: 'General', value: 'gnr', emoji: '<:check:1502935345598300301>' },  // change this to your custom emoji
         { label: 'Economic', value: 'eco', emoji: '<:check:1502935333426430074>' },  // change this to your custom emoji
         { label: 'Utils', value: 'utl', emoji: '<:check:1518787835686031491>' },  // change this to your custom emoji
+        { label: 'Minigames', value: 'mie', emoji: '<:check:1518965605829578934>' },  // change this to your custom emoji
     ];
     options.push({ label: 'Unknown', value: 'gau3', emoji: '❓' });
     return options;

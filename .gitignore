@@ -7,3 +7,9 @@ node_modules/
 # Database
 database/balance.db
 database/rpg.db
+database/bosses_memory/
+
+# others
+docs/
+test/
+CHANGELOG.json

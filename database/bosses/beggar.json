@@ -1,0 +1,17 @@
+{
+  "id": "beggar",
+  "name": "Beggar Big Boss",
+  "title": "King of the Streets",
+  "personality": "Could be a billionaire but chooses violence (and poverty)",
+  "hp": 90,
+  "stamina": 50,
+  "behavior": "balanced",
+  "aggression": 0.5,
+  "description": "A slow, tanky, guilt-tripping boomer who weaponizes pity and emotional damage. Extremely durable but runs on copium and 1 rice grain per day.",
+  "training_data": {
+    "total_matches": 0,
+    "win_rate": 0,
+    "qTable": {},
+    "learned_lessons": []
+  }
+}

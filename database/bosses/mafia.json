@@ -1,0 +1,17 @@
+{
+  "id": "mafia",
+  "name": "Don Moneybags",
+  "title": "Godfather of the Moneybags",
+  "personality": "Flashy, arrogant, and dangerously capitalist",
+  "hp": 85,
+  "stamina": 70,
+  "behavior": "aggressive",
+  "aggression": 0.8,
+  "description": "A rich mobster who solves every problem with money, bullets, or both. Loves flexing wealth and making it rain (literally and metaphorically).",
+  "training_data": {
+    "total_matches": 0,
+    "win_rate": 0,
+    "qTable": {},
+    "learned_lessons": []
+  }
+}

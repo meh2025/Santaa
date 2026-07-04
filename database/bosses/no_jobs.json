@@ -1,0 +1,17 @@
+{
+  "id": "no_jobs",
+  "name": "No Jobs",
+  "title": "CEO of Pineapple",
+  "personality": "Reality distortion field master, professional yapper",
+  "hp": 80,
+  "stamina": 65,
+  "behavior": "balanced",
+  "aggression": 0.6,
+  "description": "A sleek, overpriced tech cult leader who reinvents everything badly. Talks about changing the world while selling you $2000 trash cans and locked ecosystems.",
+  "training_data": {
+    "total_matches": 0,
+    "win_rate": 0,
+    "qTable": {},
+    "learned_lessons": []
+  }
+}

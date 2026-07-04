@@ -39,6 +39,8 @@ async function applyLosses(loserId, channel) {
 
   // Start regeneration timer (10‑minute ticks)
   scheduleRegen(loserId, channel);
+
+  return { lossAmount };
 }
 
 /**
@@ -60,13 +62,11 @@ function scheduleRegen(userId, channel) {
     await rpgmanager.updateStats(userId, newHealth, newStamina);
     const regenEmbed = new EmbedBuilder()
       .setDescription(`🔄 <@${userId}> regenerated +${regenStep} health and +${regenStep} stamina (now ${newHealth}/${newStamina}).`)
-      .setColor('#55ff55');
     await channel.send({ embeds: [regenEmbed] });
     if (newHealth >= 100 && newStamina >= 100) {
       clearInterval(timer);
       const doneEmbed = new EmbedBuilder()
         .setDescription(`✅ <@${userId}> has fully regenerated health and stamina.`)
-        .setColor('#55ff55');
       await channel.send({ embeds: [doneEmbed] });
     }
   }, intervalMs);
@@ -155,10 +155,22 @@ async function awardExperience(winnerId) {
   return { levelUp: newLevel > stats.level, newLevel };
 }
 
+/**
+ * Record a completed PVP match to the history table.
+ */
+async function recordMatch(winnerId, loserId, expGained = 20, moneyLost = 0) {
+  try {
+    await rpgmanager.recordPvpResult(winnerId, loserId, expGained, moneyLost);
+  } catch (e) {
+    console.error('[pvpCore] Failed to record match result:', e);
+  }
+}
+
 module.exports = {
   applyLosses,
   scheduleRegen,
   attemptRun,
   executeAttack,
   awardExperience,
+  recordMatch,
 };

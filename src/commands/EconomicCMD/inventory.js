@@ -5,7 +5,7 @@ const { getTotalStats, allItemsCache } = require('../Utils/StatsCalculator');
 
 module.exports = {
     name: 'inventory',
-    description: 'Check your stats and purchased items',
+    description: 'Checking your inventory and profile stats',
     category: 'eco',
     async execute(message, args) {
         let inventoryItems = await rpgmanager.getInventory(message.author.id);
@@ -88,13 +88,24 @@ module.exports = {
                         if (itemData.type === 'consumable') {
                             btnRow.addComponents(new ButtonBuilder().setCustomId('inv_use').setLabel('Use').setStyle(ButtonStyle.Success).setEmoji('🍎'));
                         } else if (itemData.type === 'equippable') {
-                            const isEquipped = userStats.equippedItemId === selectedInvItem.item_id;
-                            btnRow.addComponents(new ButtonBuilder()
-                                .setCustomId('inv_equip')
-                                .setLabel(isEquipped ? 'Equipped' : 'Equip')
-                                .setStyle(isEquipped ? ButtonStyle.Secondary : ButtonStyle.Primary)
-                                .setDisabled(isEquipped)
-                                .setEmoji('🛡️'));
+                            // determine if this item_id is among equipped items
+                            const equippedArr = userStats.equippedItemsArr || [];
+                            const isEquipped = equippedArr.includes(selectedInvItem.item_id);
+                            if (isEquipped) {
+                                btnRow.addComponents(new ButtonBuilder()
+                                    .setCustomId('inv_unequip')
+                                    .setLabel('Unequip')
+                                    .setStyle(ButtonStyle.Secondary)
+                                    .setEmoji('🗑️'));
+                            } else {
+                                btnRow.addComponents(new ButtonBuilder()
+                                    .setCustomId('inv_equip')
+                                    .setLabel('Equip')
+                                    .setStyle(ButtonStyle.Primary)
+                                    .setEmoji('🛡️'));
+                            }
+                        } else if (itemData.type === 'sellable') {
+                            btnRow.addComponents(new ButtonBuilder().setCustomId('inv_sell').setLabel('Sell').setStyle(ButtonStyle.Danger).setEmoji('💰'));
                         }
                         if (btnRow.components.length > 0) components.push(btnRow);
                     }
@@ -137,7 +148,7 @@ module.exports = {
                     return;
                 }
 
-                if (i.customId === 'inv_use' || i.customId === 'inv_equip') {
+                    if (i.customId === 'inv_use' || i.customId === 'inv_equip' || i.customId === 'inv_unequip') {
                     const rawInventory = await rpgmanager.getInventory(i.user.id);
                     const itemInstance = rawInventory.find(item => item.item_id.toString() === selectedInventoryId);
 
@@ -163,11 +174,33 @@ module.exports = {
                         selectedInventoryId = null;
                         await i.reply({ content: `✅ You used **${itemData.name}**!`, ephemeral: true });
                     } else if (i.customId === 'inv_equip' && itemData.type === 'equippable') {
-                        if (userStats.equipped_item_id === itemData.id) {
-                            return i.reply({ content: `You have already equipped **${itemData.name}**!`, ephemeral: true });
+                        const res = await rpgmanager.equipItem(i.user.id, itemData.id);
+                        if (res && res.changed === false && res.reason === 'limit') {
+                            return i.reply({ content: 'You can only equip up to 3 items. Unequip one first.', ephemeral: true });
                         }
-                        await rpgmanager.equipItem(i.user.id, itemData.id);
                         await i.reply({ content: `✅ You equipped **${itemData.name}**!`, ephemeral: true });
+                    } else if (i.customId === 'inv_unequip' && itemData.type === 'equippable') {
+                        const res = await rpgmanager.unequipItem(i.user.id, itemData.id);
+                        if (res && res.changed) {
+                            await i.reply({ content: `✅ You unequipped **${itemData.name}**!`, ephemeral: true });
+                        } else {
+                            await i.reply({ content: `Item was not equipped.`, ephemeral: true });
+                        }
+                    } else if (i.customId === 'inv_sell' && itemData.type === 'sellable') {
+                        const userStats = await rpgmanager.getStats(i.user.id);
+                        const userInventory = await rpgmanager.getInventory(i.user.id);
+                        const itemInstance = userInventory.find(item => item.item_id.toString() === selectedInventoryId);
+                        if (userStats.equipped_items) {
+                            try {
+                                const eqArr = JSON.parse(userStats.equipped_items || '[]');
+                                if (eqArr.includes(itemData.id)) {
+                                    await rpgmanager.unequipItem(i.user.id, itemData.id);
+                                }
+                            } catch (e) { }
+                        }
+                        await rpgmanager.removeItem(itemInstance.id);
+                        // Selling does not change base health/stamina fields here
+                        await i.reply({ content: `✅ You sold **${itemData.name}**!`, ephemeral: true });
                     }
 
                     await response.edit(await generateEmbedAndComponents(currentPage));

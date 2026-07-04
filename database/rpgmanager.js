@@ -28,16 +28,29 @@ module.exports = {
                 defense INTEGER DEFAULT 2,
                 level INTEGER DEFAULT 1,
                 exp INTEGER DEFAULT 0,
-                equipped_item_id TEXT DEFAULT NULL
+                steals INTEGER DEFAULT 0,
+                equipped_item_id TEXT DEFAULT NULL,
+                equipped_items TEXT DEFAULT '[]'
+            )
+        `);
+
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS pvp_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                winner_id TEXT NOT NULL,
+                loser_id TEXT NOT NULL,
+                fought_at INTEGER DEFAULT (strftime('%s', 'now')),
+                winner_exp_gained INTEGER DEFAULT 20,
+                loser_money_lost INTEGER DEFAULT 0
             )
         `);
 
         // Ensure columns exist for existing databases
-        await db.exec(`
-            ALTER TABLE stats ADD COLUMN defense INTEGER DEFAULT 2;
-            ALTER TABLE stats ADD COLUMN level INTEGER DEFAULT 1;
-            ALTER TABLE stats ADD COLUMN exp INTEGER DEFAULT 0;
-        `).catch(() => { }); // Ignore error if columns already exist
+        try { await db.exec(`ALTER TABLE stats ADD COLUMN defense INTEGER DEFAULT 2;`); } catch (e) {}
+        try { await db.exec(`ALTER TABLE stats ADD COLUMN level INTEGER DEFAULT 1;`); } catch (e) {}
+        try { await db.exec(`ALTER TABLE stats ADD COLUMN exp INTEGER DEFAULT 0;`); } catch (e) {}
+        try { await db.exec(`ALTER TABLE stats ADD COLUMN steals INTEGER DEFAULT 0;`); } catch (e) {}
+        try { await db.exec(`ALTER TABLE stats ADD COLUMN equipped_items TEXT DEFAULT '[]';`); } catch (e) {}
     },
 
     // Add item to inventory
@@ -59,8 +72,8 @@ module.exports = {
     async getStats(userId) {
         let stats = await db.get('SELECT * FROM stats WHERE user_id = ?', [userId]);
         if (!stats) {
-            await db.run('INSERT OR IGNORE INTO stats (user_id, health, stamina, attack, defense, level, exp, equipped_item_id) VALUES (?, 100, 100, 5, 2, 1, 0, NULL)', [userId]);
-            stats = { user_id: userId, health: 100, stamina: 100, attack: 5, defense: 2, level: 1, exp: 0, equipped_item_id: null };
+            await db.run('INSERT OR IGNORE INTO stats (user_id, health, stamina, attack, defense, level, exp, steals, equipped_item_id) VALUES (?, 100, 100, 5, 2, 1, 0, 0, NULL)', [userId]);
+            stats = { user_id: userId, health: 100, stamina: 100, attack: 5, defense: 2, level: 1, exp: 0, steals: 0, equipped_item_id: null };
         }
         return stats;
     },
@@ -71,13 +84,14 @@ module.exports = {
     },
 
     // Specifically update attack/defense/level/exp
-    async updateProgress(userId, { attack, defense, level, exp }) {
+    async updateProgress(userId, { attack, defense, level, exp, steals }) {
         const updates = [];
         const params = [];
         if (attack !== undefined) { updates.push('attack = ?'); params.push(attack); }
         if (defense !== undefined) { updates.push('defense = ?'); params.push(defense); }
         if (level !== undefined) { updates.push('level = ?'); params.push(level); }
         if (exp !== undefined) { updates.push('exp = ?'); params.push(exp); }
+        if (steals !== undefined) { updates.push('steals = ?'); params.push(steals); }
 
         if (updates.length === 0) return;
         params.push(userId);
@@ -86,11 +100,121 @@ module.exports = {
 
     // Equip item
     async equipItem(userId, itemId) {
-        return await db.run('UPDATE stats SET equipped_item_id = ? WHERE user_id = ?', [itemId, userId]);
+        // push itemId into equipped_items JSON array if not already present and limit 3
+        // Use SELECT * to avoid SQL error if equipped_items column is missing on older DBs
+        const row = await db.get('SELECT * FROM stats WHERE user_id = ?', [userId]);
+        let arr = [];
+        try { arr = row && row.equipped_items ? JSON.parse(row.equipped_items) : []; } catch (e) { arr = []; }
+        if (!arr.includes(itemId)) {
+            if (arr.length >= 3) return { changed: false, reason: 'limit' };
+            arr.push(itemId);
+        }
+        await db.run('UPDATE stats SET equipped_items = ? WHERE user_id = ?', [JSON.stringify(arr), userId]);
+        return { changed: true };
+    },
+
+    // Unequip a specific item from equipped_items
+    async unequipItem(userId, itemId) {
+        // Use SELECT * to avoid SQL error if equipped_items column is missing
+        const row = await db.get('SELECT * FROM stats WHERE user_id = ?', [userId]);
+        let arr = [];
+        try { arr = row && row.equipped_items ? JSON.parse(row.equipped_items) : []; } catch (e) { arr = []; }
+        const idx = arr.indexOf(itemId);
+        if (idx !== -1) {
+            arr.splice(idx, 1);
+            await db.run('UPDATE stats SET equipped_items = ? WHERE user_id = ?', [JSON.stringify(arr), userId]);
+            return { changed: true };
+        }
+        return { changed: false };
     },
 
     // Transfer an inventory item to another user (for trade)
     async transferItem(inventoryId, newUserId) {
         return await db.run('UPDATE inventory SET user_id = ? WHERE id = ?', [newUserId, inventoryId]);
     },
+
+    // ── PVP History ───────────────────────────────────────────────────────
+
+    /**
+     * Record the result of a PVP match.
+     */
+    async recordPvpResult(winnerId, loserId, expGained = 20, moneyLost = 0) {
+        return await db.run(
+            'INSERT INTO pvp_history (winner_id, loser_id, winner_exp_gained, loser_money_lost) VALUES (?, ?, ?, ?)',
+            [winnerId, loserId, expGained, moneyLost]
+        );
+    },
+
+    /**
+     * Get recent PVP matches for a user (as winner or loser).
+     * @param {string} userId
+     * @param {number} limit  max records to return (default 10)
+     */
+    async getPvpHistory(userId, limit = 10) {
+        return await db.all(
+            `SELECT * FROM pvp_history
+             WHERE winner_id = ? OR loser_id = ?
+             ORDER BY fought_at DESC LIMIT ?`,
+            [userId, userId, limit]
+        );
+    },
+
+    /**
+     * Get top players by win count.
+     * @param {number} limit  number of top entries (default 10)
+     */
+    async getPvpLeaderboard(limit = 10) {
+        return await db.all(
+            `SELECT winner_id,
+                    COUNT(*) AS wins,
+                    (SELECT COUNT(*) FROM pvp_history l WHERE l.loser_id = w.winner_id) AS losses
+             FROM pvp_history w
+             GROUP BY winner_id
+             ORDER BY wins DESC
+             LIMIT ?`,
+            [limit]
+        );
+    },
+
+    /**
+     * Get win/loss/win-rate stats for a specific user.
+     */
+    async getPvpStats(userId) {
+        const wins   = (await db.get('SELECT COUNT(*) AS cnt FROM pvp_history WHERE winner_id = ?', [userId]))?.cnt ?? 0;
+        const losses = (await db.get('SELECT COUNT(*) AS cnt FROM pvp_history WHERE loser_id  = ?', [userId]))?.cnt ?? 0;
+        const total  = wins + losses;
+        const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+        return { wins, losses, total, winRate };
+    },
+
+    async getLevelLeaderboard(limit = 10) {
+        return await db.all(
+            `SELECT user_id, level, exp FROM stats
+             ORDER BY level DESC, exp DESC
+             LIMIT ?`,
+            [limit]
+        );
+    },
+
+    async getWinsLeaderboard(limit = 10) {
+        return await db.all(
+            `SELECT winner_id AS user_id, COUNT(*) AS wins
+             FROM pvp_history
+             GROUP BY winner_id
+             ORDER BY wins DESC
+             LIMIT ?`,
+            [limit]
+        );
+    },
+
+    async getStealsLeaderboard(limit = 10) {
+        return await db.all(
+            `SELECT user_id, steals FROM stats
+             WHERE steals > 0
+             ORDER BY steals DESC, user_id ASC
+             LIMIT ?`,
+            [limit]
+        );
+    },
 };
+

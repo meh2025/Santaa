@@ -31,15 +31,26 @@ cd Santaa-discordBot
 npm install
 ```
 
-We have two way to run this noel ahh bot:
+Before you running these shii run bot, you have to fix some stuff at .env file (currently exampleenv.txt), run this command:
+```
+For linux and MacOS:
+cp exampleenv.txt .env
+
+For Windows:
+copy exampleenv.txt .env
+```
+After running command, remember to change its required value (Also, remember to make a new folder on database/ and name it "bosses_memory" for PVP AI Boss)
+
+---
+Finally, We have two way to run this noel ahh bot:
 1. running via cmd
 ```bash
 npm run dev # for development
 
 npm run start # for daily use
+
+npm run test # test bugging
 ```
-2. running via shell: idk just run the santaa.sh bro 😭 😭
+2. running via shell: just run ```bash scripts/santaa.sh``` bro 😭 😭
 
-
----
 thx for read ts, have a gut day bradar

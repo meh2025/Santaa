@@ -1,5 +1,5 @@
 const {EmbedBuilder } = require('discord.js');
-const { checkCooldown } = require('../Utils/Cooldown');
+const { checkCooldown, getCooldownDuration } = require('../Utils/Cooldown');
 
 module.exports = {
     name: 'daily',
@@ -11,7 +11,7 @@ module.exports = {
         const dbManager = message.client.db;
 
         // Cooldown
-        const clntime = 24 * 60 * 60 * 1000; // 24 hour cooldown
+        const clntime = getCooldownDuration(this.name, 24 * 60 * 60 * 1000);
         const timeLeft = checkCooldown(author.id, this.name, clntime);
 
         if (timeLeft) {
@@ -22,10 +22,10 @@ module.exports = {
         const dailyReward = Math.floor(Math.random() * (50 - 20 + 1)) + 20; // Random reward between 20 and 50
 
         try {
-            await dbManager.addMoney(message.author.id, dailyReward);
+            await dbManager.addMoney(message.author.id, dailyReward, { trackEarning: true });
             const dailyEmbed = new EmbedBuilder()
                 .setTitle('Daily Reward Claimed!')
-                .setDescription(`You have claimed your daily reward of **$${dailyReward.toLocaleString()}**, come back tomorrow for more!`)
+                .setDescription(`You have claimed your daily reward of **${dailyReward.toLocaleString()}🪙**, come back tomorrow for more!`)
                 .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
                 .setTimestamp();
             message.channel.send({ embeds: [dailyEmbed] });

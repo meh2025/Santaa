@@ -1,17 +1,17 @@
 const { EmbedBuilder } = require('discord.js');
 const { jobs , jobs_txt} = require('../Utils/tips'); // Import job from tips.js
-const { checkCooldown } = require('../Utils/Cooldown'); // Import cooldown function from Cooldown.js
+const { checkCooldown, getCooldownDuration } = require('../Utils/Cooldown'); // Import cooldown function from Cooldown.js
 
 module.exports = {
     name: 'parttime',
-    description: 'Work to earn money (4 minute cooldown)',
+    description: 'Do part-time work cuz u unemployed final boss (4 minute cooldown)',
     category: 'eco',
     async execute(message) {
         const { client , author } = message;
         const dbManager = message.client.db;
 
         // Cooldown
-        const clntime = 4 * 60 * 1000; // 4 minute cooldown
+        const clntime = getCooldownDuration(this.name, 4 * 60 * 1000);
         const timeLeft = checkCooldown(author.id, this.name, clntime);
 
         if (timeLeft) {
@@ -26,7 +26,7 @@ module.exports = {
         const amountEarned = Math.floor(Math.random() * (50 - 5 + 1)) + 5;
 
         try {
-            await dbManager.addMoney(message.author.id, amountEarned);
+            await dbManager.addMoney(message.author.id, amountEarned, { trackEarning: true });
 
             // work embed
             const workEmbed = new EmbedBuilder()
@@ -36,7 +36,7 @@ module.exports = {
                 })
                 .setDescription(
                     `${randJob.icon} **${randJob.name}**` +
-                    ` and you earned **$${amountEarned.toLocaleString()}**!\n\n` +
+                    ` and you earned **${amountEarned.toLocaleString()}🪙**!\n\n` +
                     `*"${jobQuote}"*`
                 )
                 .setTimestamp();
