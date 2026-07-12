@@ -43,14 +43,13 @@ module.exports = {
             const paged = list.slice(start, start + itemsPerPage);
 
             const displayContent = paged.map((item, index) => {
-                return `**${start + index + 1}. ${item.name}** *${item.desc || ''}*\n💰 Value: ${item.sell} coins`;
+                return `**${start + index + 1}. ${item.name}** *${item.desc || ''}*\nValue: ${item.sell} coins`;
             }).join('\n\n') || 'No minerals found in this rarity.';
 
             return {
                 embed: new EmbedBuilder()
-                    .setTitle(`⛏️ Mineral List - ${RARITY_CONFIG[category].label}`)
+                    .setTitle(`Mineral List - ${RARITY_CONFIG[category].label}`)
                     .setDescription(displayContent)
-                    .setColor(colorFor(category))
                     .setFooter({ text: `Page ${page + 1} of ${totalPages}` }),
                 totalPages
             };

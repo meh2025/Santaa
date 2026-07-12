@@ -18,7 +18,7 @@ module.exports = {
         const count = fishCounts.get(userId) || 0;
         if (count >= 5) {
             // If cooldown already active, inform user. If not, this call will set the cooldown and we should inform the user.
-            const cooldownTime = checkCooldown(userId, 'fish_exhaustion', getCooldownDuration('fish_exhaustion', 60 * 60 * 1000));
+            const cooldownTime = checkCooldown(userId, 'fish_exhaustion');
             if (cooldownTime) {
                 return message.reply(`🎣 You're exhausted! Please wait **${cooldownTime}** before fishing again.`);
             } else {

@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const rpgmanager = require('../../../database/rpgmanager');
-const { checkCooldown, getCooldownDuration } = require('../../commands/Utils/Cooldown');
+const { checkCooldown } = require('../../commands/Utils/Cooldown');
 const mineCore = require('./mineCore');
 const mineBoard = require('./mineBoard');
 const mineUI = require('./mineUI');
@@ -21,8 +21,8 @@ module.exports = {
 		// exhaustion check (mirror fishing)
 		const count = mineCounts.get(userId) || 0;
 		if (count >= 5) {
-			const cooldownTime = checkCooldown(userId, 'mine_exhaustion', getCooldownDuration('mine_exhaustion', 60 * 60 * 1000));
-			if (cooldownTime) return message.reply(`⛏️ You're exhausted! Wait **${cooldownTime}** before mining again.`);
+			const cooldownTime = checkCooldown(userId, 'mine_exhaustion');
+			if (cooldownTime) return message.reply(`You're exhausted! Wait **${cooldownTime}** before mining again.`);
 			else mineCounts.set(userId, 0);
 		}
 
@@ -76,9 +76,9 @@ module.exports = {
 				mineCounts.set(userId, (mineCounts.get(userId) || 0) + 1);
 
 				const doneEmbed = new EmbedBuilder()
-					.setTitle('⛏️ Cash Out')
+					.setTitle('Cash Out')
 					.setDescription(`You cashed out and kept ${session.sessionLoot.length} minerals.`)
-					.setColor('Green');
+					.setColor('#16A34A');
 
 				await i.update({ embeds: [doneEmbed], components: mineUI.buildButtonRows(session, true) }).catch(() => { });
 				return;
@@ -107,9 +107,9 @@ module.exports = {
 				if (session.board && session.board[idx]) session.board[idx].committed = true;
 
 				const keepEmbed = new EmbedBuilder()
-					.setTitle('💎 Kept item')
+					.setTitle('Kept item')
 					.setDescription(`You kept **${item.name}** and added it to your inventory.`)
-					.setColor('Green');
+					.setColor('#16A34A');
 
 				const rowsAfter = mineUI.buildButtonRows(session);
 				await i.update({ embeds: [keepEmbed], components: rowsAfter }).catch(() => { });
@@ -141,9 +141,9 @@ module.exports = {
 					mineBoard.activeSessions.delete(userId);
 
 					const lostEmbed = new EmbedBuilder()
-						.setTitle('💥 Boom!')
+						.setTitle('Boom!')
 						.setDescription('You hit a bomb and lost your session loot. -15 HP')
-						.setColor('Red');
+						.setColor('#DC2626');
 
 					await i.update({ embeds: [lostEmbed], components: mineUI.buildButtonRows(session, true) }).catch(() => { });
 					return;
@@ -158,9 +158,9 @@ module.exports = {
 					mineCounts.set(userId, (mineCounts.get(userId) || 0) + 1);
 
 					const winEmbed = new EmbedBuilder()
-						.setTitle('✅ Perfect Mine!')
+						.setTitle('Perfect Mine!')
 						.setDescription(`You cleared the mine and kept ${session.sessionLoot.length} minerals. +25% EXP`) 
-						.setColor('Green');
+						.setColor('#16A34A');
 
 					await i.update({ embeds: [winEmbed], components: mineUI.buildButtonRows(session, true) }).catch(() => { });
 					return;
@@ -179,9 +179,8 @@ module.exports = {
 			if (session.status === 'playing') {
 				mineBoard.activeSessions.delete(userId);
 				const expireEmbed = new EmbedBuilder()
-					.setTitle('⏱️ Session expired')
-					.setDescription('Your mining session expired. Session loot was lost.')
-					.setColor('Grey');
+					.setTitle('Session expired')
+					.setDescription('Your mining session expired. Session loot was lost.');
 
 				try {
 					await mainMsg.edit({ embeds: [expireEmbed], components: mineUI.buildButtonRows(session, true) });

@@ -1,4 +1,4 @@
-const {EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ModalBuilder, TextInputBuilder, TextInputStyle} = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
 module.exports = {
     name: 'balance',
@@ -33,8 +33,8 @@ module.exports = {
 
         // Withdraw and deposit buttons
         const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('dep_modal').setLabel('Deposit').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId('with_modal').setLabel('Withdraw').setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder().setCustomId('dep_modal').setLabel('Deposit').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('with_modal').setLabel('Withdraw').setStyle(ButtonStyle.Secondary)
         );
 
         const response = await message.channel.send({ embeds: [balanceEmbed(balanceData)], components: [row] });
@@ -95,7 +95,7 @@ module.exports = {
 
         collector.on('end', async () => {
             row.components.forEach(btn => btn.setDisabled(true));
-            response.edit({ components: [row] }).catch(() => {});
+            response.edit({ components: [row] }).catch(() => { });
         });
     }
 }

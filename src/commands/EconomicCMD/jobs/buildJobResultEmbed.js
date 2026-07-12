@@ -6,20 +6,20 @@ function getRandom(arr) {
 }
 
 function buildJobResultEmbed({ job, jobOutcomeText, amountText, shouldReward, minigameResult }) {
-  const title = jobOutcomeText || (shouldReward ? '✅ Job Completed!' : '❌ Job Failed...');
+  const title = jobOutcomeText || (shouldReward ? 'Job Completed!' : 'Job Failed...');
   const flavor = shouldReward ? getRandom(JobSuccess) : getRandom(JobFail);
 
   // Minigame summary line
   const minigameSummary = minigameResult?.summary
-    ? `> 🎮 *${minigameResult.summary}*`
+    ? `> *${minigameResult.summary}*`
     : '';
 
   const salaryLine = shouldReward
-    ? `💰 **Salary earned:** ${amountText}`
-    : `💸 **Half salary (consolation):** ${amountText}`;
+    ? `**Salary earned:** ${amountText}`
+    : `**Half salary (consolation):** ${amountText}`;
 
   const embed = new EmbedBuilder()
-    .setTitle(`${job.icon ?? '💼'} ${title}`)
+    .setTitle(title)
     .setDescription(
       `*"${flavor}"*\n\n` +
       `${salaryLine}\n` +

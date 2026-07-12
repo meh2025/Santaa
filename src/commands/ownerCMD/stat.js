@@ -15,8 +15,7 @@ module.exports = {
         const secs = Math.floor(uptime % 60);
 
         const statsEmbed = new EmbedBuilder()
-            .setColor('#5865F2')
-            .setTitle('📊 Bot System Statistics')
+            .setTitle('Bot System Statistics')
             .addFields(
                 { name: 'Uptime', value: `${hrs}h ${mins}m ${secs}s`, inline: true },
                 { name: 'RAM Usage', value: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB`, inline: true },

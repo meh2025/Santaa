@@ -26,27 +26,27 @@ module.exports = {
             await dbManager.getUser(targetUser.id);
 
             let description = '';
-            let color = '#43B581';
+            let color = '#16A34A';
 
             switch (subcmd) {
                 case 'set':
                     if (isNaN(amount) || amount < 0) return message.reply('Please provide a valid amount.');
                     await dbManager.setMoney(targetUser.id, amount);
                     description = `Successfully set **${targetUser.username}**'s balance to **$${amount.toLocaleString()}**.`;
-                    color = '#5865F2';
+                    color = '#16A34A';
                     break;
 
                 case 'remove':
                     if (isNaN(amount) || amount <= 0) return message.reply('Please provide a valid amount.');
                     await dbManager.removeMoney(targetUser.id, amount);
                     description = `Successfully removed **$${amount.toLocaleString()}** from **${targetUser.username}**'s account.`;
-                    color = '#F04747';
+                    color = '#16A34A';
                     break;
 
                 case 'reset':
                     await dbManager.resetMoney(targetUser.id);
                     description = `Successfully reset **${targetUser.username}**'s account to **$0**.`;
-                    color = '#000000';
+                    color = '#16A34A';
                     break;
 
                 default:
@@ -55,7 +55,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setColor(color)
-                .setTitle('💰 Admin Economy Action')
+                .setTitle('Admin Economy Action')
                 .setDescription(description)
                 .setTimestamp()
                 .setFooter({ text: `Executed by: ${message.author.tag}` });

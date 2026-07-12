@@ -1,10 +1,12 @@
 const { getBossProfile } = require('./bosses');
 
-function buildStateKey({ player, boss, turn }) {
+function buildStateKey({ player, boss, turn, recentPlayerActions = [] }) {
   const playerHealthBand = player.hp > 60 ? 'high' : player.hp > 30 ? 'mid' : 'low';
+  const playerStaminaBand = player.stamina > 20 ? 'high' : player.stamina > 10 ? 'mid' : 'low';
   const bossHealthBand = boss.hp > 60 ? 'high' : boss.hp > 30 ? 'mid' : 'low';
   const bossStaminaBand = boss.stamina > 20 ? 'high' : boss.stamina > 10 ? 'mid' : 'low';
-  return `${playerHealthBand}-${bossHealthBand}-${bossStaminaBand}-${turn}`;
+  const lastAction = recentPlayerActions.length > 0 ? recentPlayerActions[recentPlayerActions.length - 1] : 'none';
+  return `P_HP:${playerHealthBand}|P_ST:${playerStaminaBand}|B_HP:${bossHealthBand}|B_ST:${bossStaminaBand}|L_ACT:${lastAction}|T:${turn % 3}`;
 }
 
 function decideBotAction(state) {
@@ -18,6 +20,15 @@ function decideBotAction(state) {
   const bossIsTactical = profile.behavior === 'tactical';
   const hasHeavyPressure = recentPlayerActions.filter(action => action === 'heavy_attack').length >= 2;
   const hasDefensivePattern = recentPlayerActions.filter(action => action === 'defend').length >= 2;
+
+  // Personality-based punishment for low player stamina
+  if (player.stamina <= 5) {
+    if (bossIsAggressive) {
+      return 'heavy_attack'; // Aggressive bosses ruthlessly exploit exhaustion
+    } else if (bossIsTactical) {
+      return boss.hp < 40 ? 'recover' : 'heavy_attack'; // Tactical bosses might take the chance to heal
+    }
+  }
 
   if (isLowStamina) {
     return 'defend';
@@ -53,7 +64,7 @@ function decideBotAction(state) {
 
   const actionSet = ['attack', 'heavy_attack', 'defend', 'recover'];
   if (trainer) {
-    const stateKey = buildStateKey({ player, boss, turn });
+    const stateKey = buildStateKey({ player, boss, turn, recentPlayerActions });
     return trainer.chooseAction(stateKey, actionSet);
   }
 

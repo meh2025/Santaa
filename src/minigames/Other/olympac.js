@@ -1,15 +1,15 @@
-const { 
-  EmbedBuilder, 
-  ActionRowBuilder, 
-  ButtonBuilder, 
-  ButtonStyle, 
-  ComponentType 
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType
 } = require('discord.js');
 
 const olympacPrompts = [
   {
     id: 'run-1',
-    prompt: 'Tap as fast as you can! ⚡',
+    prompt: 'Tap as fast as you can!',
     targetTaps: 10,
     timeLimitMs: 5000,
     reward: 100
@@ -23,7 +23,7 @@ const olympacPrompts = [
   },
   {
     id: 'run-3',
-    prompt: 'Olympic Final Sprint! 🏅',
+    prompt: 'Olympic Final Sprint!',
     targetTaps: 22,
     timeLimitMs: 7000,
     reward: 220
@@ -61,8 +61,8 @@ module.exports = {
       const startEmbed = new EmbedBuilder()
         .setTitle('🏃‍♂️ Olympac Sprint')
         .setDescription(`**Challenge:** ${prompt.prompt}\n\n` +
-                       `**Target:** ${prompt.targetTaps} taps in ${prompt.timeLimitMs / 1000} seconds\n` +
-                       `**Reward:** ${prompt.reward} points`)
+          `**Target:** ${prompt.targetTaps} taps in ${prompt.timeLimitMs / 1000} seconds\n` +
+          `**Reward:** ${prompt.reward} points`)
         .setColor('#F59E0B')
         .setFooter({ text: 'Click Start to begin!' });
 
@@ -74,9 +74,9 @@ module.exports = {
           .setEmoji('🏁')
       );
 
-      const sent = await message.channel.send({ 
-        embeds: [startEmbed], 
-        components: [startRow] 
+      const sent = await message.channel.send({
+        embeds: [startEmbed],
+        components: [startRow]
       });
 
       const startCollector = sent.createMessageComponentCollector({
@@ -100,8 +100,8 @@ module.exports = {
         const gameEmbed = new EmbedBuilder()
           .setTitle('🏃‍♂️ SPRINTING!')
           .setDescription(`**${prompt.prompt}**\n\n` +
-                         `**Taps:** ${tapCount}/${prompt.targetTaps}\n` +
-                         `**Time Left:** ${Math.ceil(prompt.timeLimitMs / 1000)}s`)
+            `**Taps:** ${tapCount}/${prompt.targetTaps}\n` +
+            `**Time Left:** ${Math.ceil(prompt.timeLimitMs / 1000)}s`)
           .setColor('#EA580C')
           .setFooter({ text: 'TAP THE BUTTON AS FAST AS POSSIBLE!' });
 
@@ -123,9 +123,9 @@ module.exports = {
 
         tapCollector.on('collect', async (tapInteraction) => {
           if (tapInteraction.user.id !== message.author.id) {
-            return tapInteraction.reply({ 
-              content: 'This is not your sprint!', 
-              ephemeral: true 
+            return tapInteraction.reply({
+              content: 'This is not your sprint!',
+              ephemeral: true
             });
           }
 
@@ -136,12 +136,12 @@ module.exports = {
           // Update embed every few taps to avoid rate limits
           if (tapCount % 3 === 0 || timeLeft <= 3) {
             gameEmbed.setDescription(`**${prompt.prompt}**\n\n` +
-                                   `**Taps:** ${tapCount}/${prompt.targetTaps}\n` +
-                                   `**Time Left:** ${timeLeft}s`);
-            await sent.edit({ embeds: [gameEmbed] }).catch(() => {});
+              `**Taps:** ${tapCount}/${prompt.targetTaps}\n` +
+              `**Time Left:** ${timeLeft}s`);
+            await sent.edit({ embeds: [gameEmbed] }).catch(() => { });
           }
 
-          await tapInteraction.deferUpdate().catch(() => {});
+          await tapInteraction.deferUpdate().catch(() => { });
         });
 
         // End of game
@@ -151,16 +151,16 @@ module.exports = {
 
           const resultEmbed = new EmbedBuilder()
             .setTitle(success ? '🏅 SPRINT COMPLETE!' : '⏱️ Time\'s Up!')
-            .setDescription(success 
-              ? `**Excellent!** You tapped **${tapCount}** times in ${Math.floor(timeTaken/1000)}s!\n\n` +
-                `**Reward:** +${prompt.reward} points`
+            .setDescription(success
+              ? `**Excellent!** You tapped **${tapCount}** times in ${Math.floor(timeTaken / 1000)}s!\n\n` +
+              `**Reward:** +${prompt.reward} points`
               : `You managed **${tapCount}** taps.\n` +
-                `You needed **${prompt.targetTaps}** taps.`)
+              `You needed **${prompt.targetTaps}** taps.`)
             .setColor(success ? '#22C55E' : '#EF4444')
             .addFields(
               { name: 'Taps', value: `${tapCount}`, inline: true },
               { name: 'Target', value: `${prompt.targetTaps}`, inline: true },
-              { name: 'Time', value: `${Math.floor(timeTaken/1000)}s`, inline: true }
+              { name: 'Time', value: `${Math.floor(timeTaken / 1000)}s`, inline: true }
             );
 
           const disabledRow = new ActionRowBuilder().addComponents(
@@ -171,10 +171,10 @@ module.exports = {
               .setDisabled(true)
           );
 
-          await sent.edit({ 
-            embeds: [resultEmbed], 
-            components: [disabledRow] 
-          }).catch(() => {});
+          await sent.edit({
+            embeds: [resultEmbed],
+            components: [disabledRow]
+          }).catch(() => { });
 
           // TODO: Add reward logic here (economy system)
           if (success) {

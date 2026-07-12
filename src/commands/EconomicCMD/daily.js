@@ -1,5 +1,5 @@
 const {EmbedBuilder } = require('discord.js');
-const { checkCooldown, getCooldownDuration } = require('../Utils/Cooldown');
+const { checkCooldown } = require('../Utils/Cooldown');
 
 module.exports = {
     name: 'daily',
@@ -11,8 +11,7 @@ module.exports = {
         const dbManager = message.client.db;
 
         // Cooldown
-        const clntime = getCooldownDuration(this.name, 24 * 60 * 60 * 1000);
-        const timeLeft = checkCooldown(author.id, this.name, clntime);
+        const timeLeft = checkCooldown(author.id, this.name);
 
         if (timeLeft) {
             return message.reply(`Please wait ${timeLeft} before using the \`${this.name}\` command again.`);
@@ -25,7 +24,7 @@ module.exports = {
             await dbManager.addMoney(message.author.id, dailyReward, { trackEarning: true });
             const dailyEmbed = new EmbedBuilder()
                 .setTitle('Daily Reward Claimed!')
-                .setDescription(`You have claimed your daily reward of **${dailyReward.toLocaleString()}🪙**, come back tomorrow for more!`)
+                .setDescription(`You have claimed your daily reward of **${dailyReward.toLocaleString()}**, come back tomorrow for more!`)
                 .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
                 .setTimestamp();
             message.channel.send({ embeds: [dailyEmbed] });

@@ -10,12 +10,11 @@ const CELL_EMOJI = {
 const COUNT_EMOJI = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
 
 function buildEmbed(user, stats, session) {
-    const title = `⛏️ Mining — ${user.username}`;
-    const description = 'Click a tile to mine. 💰 Cash Out anytime to keep loot.';
+    const title = `Mining — ${user.username}`;
+    const description = 'Click a tile to mine. Cash Out anytime to keep loot.';
     const embed = new EmbedBuilder()
         .setTitle(title)
         .setDescription(description)
-        .setColor('Grey')
         .addFields(
             { name: 'HP / Revealed', value: `${stats.health}/100 • ${session.revealedCount || 0}/${session.safeCells || 0}` },
             { name: 'Session Loot', value: (session.sessionLoot && session.sessionLoot.length) ? session.sessionLoot.map(m => `${m.name}`).join(', ') : 'None' }
@@ -26,7 +25,7 @@ function buildEmbed(user, stats, session) {
 function getCellLabel(cell, revealAll) {
     if (!cell) return CELL_EMOJI.hidden;
     if (!cell.revealed && !revealAll) return CELL_EMOJI.hidden;
-    if (cell.type === 'cashout') return '💰';
+    if (cell.type === 'cashout') return 'Cash';
     if (cell.type === 'bomb') return CELL_EMOJI.bomb;
     if (cell.type === 'mineral') return CELL_EMOJI.mineral;
     if (cell.type === 'empty') return (cell.adjacentMines ? COUNT_EMOJI[cell.adjacentMines] : CELL_EMOJI.empty);

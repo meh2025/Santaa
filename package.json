@@ -17,6 +17,7 @@
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
+    "@napi-rs/canvas": "^1.0.2",
     "discord.js": "^14.26.4",
     "dotenv": "^17.4.2",
     "sqlite": "^5.1.1",

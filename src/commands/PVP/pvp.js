@@ -145,32 +145,32 @@ module.exports = {
           components: [actionRow]
         });
 
-         while (!battleOver) {
-           // Check if the current player has 0 stamina - if so, they lose immediately
-           const currentStats = await rpgmanager.getStats(currentTurnId);
-           if (currentStats.stamina <= 0) {
-             const winnerId = currentTurnId === attackerId ? defenderId : attackerId;
-             const loserId = currentTurnId;
-             
-             await combatMsg.edit({
-               embeds: [new EmbedBuilder().setTitle('Exhausted!').setDescription(`<@${loserId}> has run out of stamina and cannot fight! <@${winnerId}> wins by default.`).setColor('#ff0000')],
-               components: []
-             });
-             
-             const lossData = await applyLosses(loserId, message.channel);
-             const expResult = await awardExperience(winnerId);
-             const moneyLost = lossData?.lossAmount ?? 0;
-             await recordMatch(winnerId, loserId, 20, moneyLost);
-             const winMsg = expResult.levelUp 
-               ? `🎉 <@${winnerId}> won by exhaustion and LEVELED UP to ${expResult.newLevel}!` 
-               : `🏆 <@${winnerId}> won by exhaustion!`;
-             await message.channel.send({ content: winMsg });
-             
-             battleOver = true;
-             continue;
-           }
+        while (!battleOver) {
+          // Check if the current player has 0 stamina - if so, they lose immediately
+          const currentStats = await rpgmanager.getStats(currentTurnId);
+          if (currentStats.stamina <= 0) {
+            const winnerId = currentTurnId === attackerId ? defenderId : attackerId;
+            const loserId = currentTurnId;
 
-           const actionFilter = i => i.customId.startsWith('pvp_') && i.user.id === currentTurnId;
+            await combatMsg.edit({
+              embeds: [new EmbedBuilder().setTitle('Exhausted!').setDescription(`<@${loserId}> has run out of stamina and cannot fight! <@${winnerId}> wins by default.`).setColor('#ff0000')],
+              components: []
+            });
+
+            const lossData = await applyLosses(loserId, message.channel);
+            const expResult = await awardExperience(winnerId);
+            const moneyLost = lossData?.lossAmount ?? 0;
+            await recordMatch(winnerId, loserId, 20, moneyLost);
+            const winMsg = expResult.levelUp
+              ? `🎉 <@${winnerId}> won by exhaustion and LEVELED UP to ${expResult.newLevel}!`
+              : `🏆 <@${winnerId}> won by exhaustion!`;
+            await message.channel.send({ content: winMsg });
+
+            battleOver = true;
+            continue;
+          }
+
+          const actionFilter = i => i.customId.startsWith('pvp_') && i.user.id === currentTurnId;
 
           const actionCollector = combatMsg.createMessageComponentCollector({ filter: actionFilter, time: 60000, max: 1 });
 
@@ -227,26 +227,26 @@ module.exports = {
                 components: [actionRow]
               });
               currentTurnId = nextTurnId;
-             } else if (attackResult.isDefeated) {
-               const winnerId = currentTurnId;
-               
-               await combatMsg.edit({
-                 embeds: [new EmbedBuilder().setTitle('K.O.!').setDescription(`<@${targetId}> was defeated!`).setColor('#ff0000')],
-                 components: []
-               });
-               const lossData2 = await applyLosses(targetId, message.channel);
-               const moneyLost2 = lossData2?.lossAmount ?? 0;
-               
-               const expResult = await awardExperience(winnerId);
-               await recordMatch(winnerId, targetId, 20, moneyLost2);
-               const winMsg = expResult.levelUp 
-                 ? `🎉 <@${winnerId}> won and LEVELED UP to ${expResult.newLevel}!` 
-                 : `🏆 <@${winnerId}> won the duel!`;
-               
-               await message.channel.send({ content: winMsg });
-               
-               battleOver = true;
-             } else {
+            } else if (attackResult.isDefeated) {
+              const winnerId = currentTurnId;
+
+              await combatMsg.edit({
+                embeds: [new EmbedBuilder().setTitle('K.O.!').setDescription(`<@${targetId}> was defeated!`).setColor('#ff0000')],
+                components: []
+              });
+              const lossData2 = await applyLosses(targetId, message.channel);
+              const moneyLost2 = lossData2?.lossAmount ?? 0;
+
+              const expResult = await awardExperience(winnerId);
+              await recordMatch(winnerId, targetId, 20, moneyLost2);
+              const winMsg = expResult.levelUp
+                ? `🎉 <@${winnerId}> won and LEVELED UP to ${expResult.newLevel}!`
+                : `🏆 <@${winnerId}> won the duel!`;
+
+              await message.channel.send({ content: winMsg });
+
+              battleOver = true;
+            } else {
 
 
               const msg = `💥 <@${currentTurnId}> dealt ${attackResult.damage} damage to <@${targetId}>!`;

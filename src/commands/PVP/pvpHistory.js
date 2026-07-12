@@ -44,10 +44,10 @@ module.exports = {
                 .setThumbnail(target.displayAvatarURL())
                 .setDescription(rows.join('\n'))
                 .addFields(
-                    { name: '🏆 Wins',    value: `${stats.wins}`,    inline: true },
-                    { name: '💀 Losses',  value: `${stats.losses}`,  inline: true },
-                    { name: '📊 Win Rate',value: `${stats.winRate}%`, inline: true },
-                    { name: '📈 Rate',    value: winRateBar,         inline: false },
+                    { name: '🏆 Wins', value: `${stats.wins}`, inline: true },
+                    { name: '💀 Losses', value: `${stats.losses}`, inline: true },
+                    { name: '📊 Win Rate', value: `${stats.winRate}%`, inline: true },
+                    { name: '📈 Rate', value: winRateBar, inline: false },
                 )
                 .setColor(stats.wins >= stats.losses ? '#16A34A' : '#DC2626')
                 .setFooter({ text: `Showing last ${history.length} of ${stats.total} match(es)` })
@@ -64,6 +64,6 @@ module.exports = {
 
 function buildWinRateBar(rate) {
     const filled = Math.round(rate / 10);
-    const empty  = 10 - filled;
+    const empty = 10 - filled;
     return `[${'█'.repeat(filled)}${'░'.repeat(empty)}] ${rate}%`;
 }

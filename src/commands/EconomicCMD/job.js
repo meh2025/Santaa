@@ -34,26 +34,23 @@ module.exports = {
     const action = args[0] && args[0].toLowerCase();
     if (!args.length) {
       const embed = new EmbedBuilder()
-        .setTitle('💼 Job usage')
-        .setDescription('To know job usage, use `Zjob help`')
-        .setColor('#F59E0B');
+        .setTitle('Job usage')
+        .setDescription('To know job usage, use `Zjob help`');
       return message.channel.send({ embeds: [embed] });
     }
 
     if (action === 'help') {
       const embed = new EmbedBuilder()
-        .setTitle('💼 Job usage')
-        .setDescription('Here are the available ways to use the job system:\n\n• `job` - work your current job\n• `job list` - view all available careers\n• `job choose <job_name>` - choose a new job')
-        .setColor('#F59E0B');
+        .setTitle('Job usage')
+        .setDescription('Here are the available ways to use the job system:\n\n• `job` - work your current job\n• `job list` - view all available careers\n• `job choose <job_name>` - choose a new job');
       return message.channel.send({ embeds: [embed] });
     }
 
     if (action === 'list') {
-      const jobOptions = getAvailableJobs().map(job => `${job.icon} **${job.name}** — ${job.salary}🪙/shift\n${job.description}`).join('\n\n');
+      const jobOptions = getAvailableJobs().map(job => `**${job.name}** — ${job.salary}/shift\n${job.description}`).join('\n\n');
       const embed = new EmbedBuilder()
-        .setTitle('💼 Available careers')
-        .setDescription(jobOptions)
-        .setColor('#22C55E');
+        .setTitle('Available careers')
+        .setDescription(jobOptions);
       return message.channel.send({ embeds: [embed] });
     }
 
@@ -117,7 +114,7 @@ module.exports = {
     const shouldReward = Boolean(minigameResult.success);
     const failurePenalty = Math.floor(Math.random() * 20) + 10;
     const jobOutcomeText = shouldReward ? getRandomText(JobSuccess) : getRandomText(JobFail);
-    const amountText = shouldReward ? `${pay + bonus}🪙` : `${failurePenalty}🪙`;
+    const amountText = shouldReward ? `${pay + bonus}` : `${failurePenalty}`;
 
     if (shouldReward) {
       await dbManager.addMoney(author.id, pay + bonus, { trackEarning: true });

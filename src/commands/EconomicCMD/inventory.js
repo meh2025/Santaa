@@ -36,16 +36,16 @@ module.exports = {
             totalPages = Math.max(1, Math.ceil(groupedItems.length / itemsPerPage));
 
             // Stat Display
-            let desc = `**❤️ Health:** ${userStats.health} / ${userStats.maxHealth}\n`;
-            desc += `**⚡ Stamina:** ${userStats.stamina} / ${userStats.maxStamina}\n`;
-            desc += `**🗡️ Attack:** ${userStats.totalAttack}\n`;
-            desc += `**🛡️ Equipped:** ${userStats.equippedItemName || 'None'}\n\n`;
+            let desc = `**Health:** ${userStats.health} / ${userStats.maxHealth}\n`;
+            desc += `**Stamina:** ${userStats.stamina} / ${userStats.maxStamina}\n`;
+            desc += `**Attack:** ${userStats.totalAttack}\n`;
+            desc += `**Equipped:** ${userStats.equippedItemName || 'None'}\n\n`;
 
             const start = page * itemsPerPage;
             const currentItems = groupedItems.slice(start, start + itemsPerPage);
 
             if (groupedItems.length === 0) {
-                desc += "🎒 *Your inventory is empty!*";
+                desc += "*Your inventory is empty!*";
             } else {
                 desc += "**Your Items:**\n" + currentItems.map((item, index) => {
                     return `**${start + index + 1}.** ${item.item_name} (x${item.count})`;
@@ -54,7 +54,7 @@ module.exports = {
 
 
             const embed = new EmbedBuilder()
-                .setTitle(`🎒 ${message.author.username}'s Profile & Inventory`)
+                .setTitle(`${message.author.username}'s Profile & Inventory`)
                 .setDescription(desc)
                 .setFooter({ text: `Page ${page + 1} of ${totalPages} | Total items: ${inventoryItems.length}` });
 
@@ -86,7 +86,7 @@ module.exports = {
                     if (itemData) {
                         const btnRow = new ActionRowBuilder();
                         if (itemData.type === 'consumable') {
-                            btnRow.addComponents(new ButtonBuilder().setCustomId('inv_use').setLabel('Use').setStyle(ButtonStyle.Success).setEmoji('🍎'));
+                            btnRow.addComponents(new ButtonBuilder().setCustomId('inv_use').setLabel('Use').setStyle(ButtonStyle.Success));
                         } else if (itemData.type === 'equippable') {
                             // determine if this item_id is among equipped items
                             const equippedArr = userStats.equippedItemsArr || [];
@@ -95,17 +95,15 @@ module.exports = {
                                 btnRow.addComponents(new ButtonBuilder()
                                     .setCustomId('inv_unequip')
                                     .setLabel('Unequip')
-                                    .setStyle(ButtonStyle.Secondary)
-                                    .setEmoji('🗑️'));
+                                    .setStyle(ButtonStyle.Secondary));
                             } else {
                                 btnRow.addComponents(new ButtonBuilder()
                                     .setCustomId('inv_equip')
                                     .setLabel('Equip')
-                                    .setStyle(ButtonStyle.Primary)
-                                    .setEmoji('🛡️'));
+                                    .setStyle(ButtonStyle.Primary));
                             }
                         } else if (itemData.type === 'sellable') {
-                            btnRow.addComponents(new ButtonBuilder().setCustomId('inv_sell').setLabel('Sell').setStyle(ButtonStyle.Danger).setEmoji('💰'));
+                            btnRow.addComponents(new ButtonBuilder().setCustomId('inv_sell').setLabel('Sell').setStyle(ButtonStyle.Danger));
                         }
                         if (btnRow.components.length > 0) components.push(btnRow);
                     }
@@ -172,17 +170,17 @@ module.exports = {
                         await rpgmanager.removeItem(itemInstance.id);
 
                         selectedInventoryId = null;
-                        await i.reply({ content: `✅ You used **${itemData.name}**!`, ephemeral: true });
+                        await i.reply({ content: `You used **${itemData.name}**!`, ephemeral: true });
                     } else if (i.customId === 'inv_equip' && itemData.type === 'equippable') {
                         const res = await rpgmanager.equipItem(i.user.id, itemData.id);
                         if (res && res.changed === false && res.reason === 'limit') {
                             return i.reply({ content: 'You can only equip up to 3 items. Unequip one first.', ephemeral: true });
                         }
-                        await i.reply({ content: `✅ You equipped **${itemData.name}**!`, ephemeral: true });
+                        await i.reply({ content: `You equipped **${itemData.name}**!`, ephemeral: true });
                     } else if (i.customId === 'inv_unequip' && itemData.type === 'equippable') {
                         const res = await rpgmanager.unequipItem(i.user.id, itemData.id);
                         if (res && res.changed) {
-                            await i.reply({ content: `✅ You unequipped **${itemData.name}**!`, ephemeral: true });
+                            await i.reply({ content: `You unequipped **${itemData.name}**!`, ephemeral: true });
                         } else {
                             await i.reply({ content: `Item was not equipped.`, ephemeral: true });
                         }
@@ -200,7 +198,7 @@ module.exports = {
                         }
                         await rpgmanager.removeItem(itemInstance.id);
                         // Selling does not change base health/stamina fields here
-                        await i.reply({ content: `✅ You sold **${itemData.name}**!`, ephemeral: true });
+                        await i.reply({ content: `You sold **${itemData.name}**!`, ephemeral: true });
                     }
 
                     await response.edit(await generateEmbedAndComponents(currentPage));

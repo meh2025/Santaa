@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { jobs , jobs_txt} = require('../Utils/tips'); // Import job from tips.js
-const { checkCooldown, getCooldownDuration } = require('../Utils/Cooldown'); // Import cooldown function from Cooldown.js
+const { checkCooldown } = require('../Utils/Cooldown'); // Import cooldown function from Cooldown.js
 
 module.exports = {
     name: 'parttime',
@@ -11,8 +11,7 @@ module.exports = {
         const dbManager = message.client.db;
 
         // Cooldown
-        const clntime = getCooldownDuration(this.name, 4 * 60 * 1000);
-        const timeLeft = checkCooldown(author.id, this.name, clntime);
+        const timeLeft = checkCooldown(author.id, this.name);
 
         if (timeLeft) {
             return message.reply(`Please wait ${timeLeft} before using the \`${this.name}\` command again.`);
@@ -35,8 +34,8 @@ module.exports = {
                     iconURL: message.author.displayAvatarURL() 
                 })
                 .setDescription(
-                    `${randJob.icon} **${randJob.name}**` +
-                    ` and you earned **${amountEarned.toLocaleString()}🪙**!\n\n` +
+                    `**${randJob.name}**` +
+                    ` and you earned **${amountEarned.toLocaleString()}**!\n\n` +
                     `*"${jobQuote}"*`
                 )
                 .setTimestamp();

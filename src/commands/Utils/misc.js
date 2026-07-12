@@ -188,6 +188,8 @@ module.exports = {
         'NPC cried happy tears and gave you a fat reward',
         'You helped and they blessed your bloodline',
         '"You\'re the best!" — NPC skipped away happily',
+        'its was so meh',
+        'They give you a box but you refuse to get it'
     ],
     HelperNPC_watch_success: [
         'You watched like a true sigma. Situation fixed itself.',

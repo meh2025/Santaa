@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { checkCooldown, getCooldownDuration } = require('../Utils/Cooldown');
+const { checkCooldown } = require('../Utils/Cooldown');
 const { NPC, BegSuccess, BegFail, BegStolen } = require('../Utils/misc');
 
 module.exports = {
@@ -11,8 +11,7 @@ module.exports = {
         const dbManager = message.client.db;
 
         // Cooldown
-        const clntime = getCooldownDuration(this.name, 100 * 1000);
-        const timeLeft = checkCooldown(author.id, this.name, clntime);
+        const timeLeft = checkCooldown(author.id, this.name);
 
         if (timeLeft) {
             return message.reply({ content: `Please wait ${timeLeft} before using the \`${this.name}\` command again.`, ephemeral: true });
@@ -40,7 +39,7 @@ module.exports = {
                 const randomNPC = getRandom(NPC);
 
                 embed.setTitle('Begged for money!')
-                    .setDescription(`${randomSuccess} ${randomNPC} come in and they throw money at your face! You got **${amount.toLocaleString()}**🪙!`)
+                    .setDescription(`${randomSuccess} ${randomNPC} come in and they throw money at your face! You got **${amount.toLocaleString()}**!`)
 
             } else if (chance === 2) {
                 const randomFail = getRandom(BegFail);
@@ -52,7 +51,7 @@ module.exports = {
                 const randomStolen = getRandom(BegStolen);
 
                 embed.setTitle('Oh no! You got robbed!')
-                    .setDescription(`${randomStolen}\n\nYou lost **${amount.toLocaleString()}**🪙!`)
+                    .setDescription(`${randomStolen}\n\nYou lost **${amount.toLocaleString()}**!`)
             }
             message.channel.send({ embeds: [embed] });
 

@@ -1,12 +1,12 @@
-const { 
-  EmbedBuilder, 
-  ActionRowBuilder, 
-  ButtonBuilder, 
-  ButtonStyle, 
-  ModalBuilder, 
-  TextInputBuilder, 
-  TextInputStyle, 
-  ComponentType 
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ComponentType
 } = require('discord.js');
 
 module.exports = {
@@ -25,7 +25,7 @@ module.exports = {
       const hint = this.generateHint(question.answer);
 
       const embed = new EmbedBuilder()
-        .setTitle('🖼️ Guess the Meme')
+        .setTitle('Guess the Meme')
         .setDescription(`**Hint:** \`${hint}\``)
         .setImage(question.image)
         .setFooter({ text: 'Click the button below to submit your answer' });
@@ -48,9 +48,9 @@ module.exports = {
 
       buttonCollector.on('collect', async (interaction) => {
         if (interaction.user.id !== message.author.id) {
-          return interaction.reply({ 
-            content: 'Bruh this not for you ge tout', 
-            ephemeral: true 
+          return interaction.reply({
+            content: 'Bruh this not for you ge tout',
+            ephemeral: true
           });
         }
 
@@ -69,8 +69,8 @@ module.exports = {
 
         await interaction.showModal(modal);
 
-        const modalSubmit = await interaction.awaitModalSubmit({ 
-          time: 60000 
+        const modalSubmit = await interaction.awaitModalSubmit({
+          time: 60000
         }).catch(() => null);
 
         if (!modalSubmit) return;
@@ -80,12 +80,12 @@ module.exports = {
 
         // Disable button
         row.components[0].setDisabled(true);
-        await sent.edit({ components: [row] }).catch(() => {});
+        await sent.edit({ components: [row] }).catch(() => { });
 
         const resultEmbed = new EmbedBuilder()
-          .setTitle(isCorrect ? '✅ Correct!' : '❌ Wrong!')
-          .setDescription(isCorrect 
-            ? `Well done! The answer was: **${question.answer}**` 
+          .setTitle(isCorrect ? 'Correct!' : 'Wrong!')
+          .setDescription(isCorrect
+            ? `Well done! The answer was: **${question.answer}**`
             : `Better luck next time! The correct answer was: **${question.answer}**`
           )
           .setColor(isCorrect ? '#16A34A' : '#DC2626')
@@ -97,10 +97,10 @@ module.exports = {
       buttonCollector.on('end', async (collected) => {
         if (collected.size === 0) {
           row.components[0].setDisabled(true);
-          await sent.edit({ 
-            content: '⏱️ Time\'s up!', 
-            components: [row] 
-          }).catch(() => {});
+          await sent.edit({
+            content: 'Time\'s up!',
+            components: [row]
+          }).catch(() => { });
         }
       });
 
@@ -114,14 +114,14 @@ module.exports = {
     if (!memeName) return "No hint available.";
 
     const words = memeName.split(/\s+/).filter(Boolean);
-    
+
     const processedWords = words.map(word => {
       if (word.length <= 2) return word; // Keep short words visible
-      
+
       const firstChar = word.charAt(0);
       const lastChar = word.length > 3 ? word.charAt(word.length - 1) : '';
       const hidden = "_".repeat(word.length - (lastChar ? 2 : 1));
-      
+
       return firstChar + hidden + lastChar;
     });
 
@@ -149,8 +149,8 @@ module.exports = {
 
     if (targetWords.length === 0 || inputWords.length === 0) return false;
 
-    const matchingWords = targetWords.filter(word => 
-      inputWords.some(inputWord => 
+    const matchingWords = targetWords.filter(word =>
+      inputWords.some(inputWord =>
         inputWord.includes(word) || word.includes(inputWord)
       )
     );
@@ -170,7 +170,7 @@ module.exports = {
       // Filter out very low quality or textless memes if desired
       const filtered = memes.filter(m => m.box_count <= 4); // Prefer classic memes
 
-      const randomMeme = filtered.length 
+      const randomMeme = filtered.length
         ? filtered[Math.floor(Math.random() * filtered.length)]
         : memes[Math.floor(Math.random() * memes.length)];
 

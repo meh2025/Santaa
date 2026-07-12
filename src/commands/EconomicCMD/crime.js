@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { checkCooldown, getCooldownDuration } = require('../Utils/Cooldown');
+const { checkCooldown } = require('../Utils/Cooldown');
 const { CrimeSuccess, CrimeFail, CrimeWorse } = require('../Utils/misc');
 
 module.exports = {
@@ -12,8 +12,7 @@ module.exports = {
         const rpgManager = client.rpg;
 
         // Cooldown
-        const clntime = getCooldownDuration(this.name, 300 * 1000);
-        const timeLeft = checkCooldown(author.id, this.name, clntime);
+        const timeLeft = checkCooldown(author.id, this.name);
 
         if (timeLeft) {
             return message.reply({ content: `Please wait ${timeLeft} before using the \`${this.name}\` command again.`, ephemeral: true });
@@ -52,8 +51,8 @@ module.exports = {
             if (chance === 1) {
                 await dbManager.addMoney(author.id, amount, { trackEarning: true });
                 embed.setTitle('Crime Successful!')
-                    .setDescription(`${getRandom(CrimeSuccess)}\n\nYou stole **${amount.toLocaleString()}🪙**!`)
-                    .setColor('#00FF00');
+                    .setDescription(`${getRandom(CrimeSuccess)}\n\nYou stole **${amount.toLocaleString()}**!`)
+                    .setColor('#16A34A');
             } else if (chance === 2) {
                 // Fail: lose money, health, 20 stamina
                 const penaltyMoney = Math.floor(amount / 2);
@@ -66,8 +65,8 @@ module.exports = {
                 await rpgManager.updateStats(author.id, newHealth, newStamina);
 
                 embed.setTitle('Crime Failed!')
-                    .setDescription(`${getRandom(CrimeFail)}\n\nYou lost **${penaltyMoney.toLocaleString()}🪙**, **${healthLoss} HP**, and **${staminaLoss} Stamina**!`)
-                    .setColor('#FFFF00');
+                    .setDescription(`${getRandom(CrimeFail)}\n\nYou lost **${penaltyMoney.toLocaleString()}**, **${healthLoss} HP**, and **${staminaLoss} Stamina**!`)
+                    .setColor('#DC2626');
             } else {
                 // Worse: lose money, 50 health, 50 stamina
                 const penaltyMoney = amount;
@@ -80,8 +79,8 @@ module.exports = {
                 await rpgManager.updateStats(author.id, newHealth, newStamina);
 
                 embed.setTitle('Crime Went Horribly!')
-                    .setDescription(`${getRandom(CrimeWorse)}\n\nYou lost **${penaltyMoney.toLocaleString()}🪙**, **${healthLoss} HP**, and **${staminaLoss} Stamina**!`)
-                    .setColor('#FF0000');
+                    .setDescription(`${getRandom(CrimeWorse)}\n\nYou lost **${penaltyMoney.toLocaleString()}**, **${healthLoss} HP**, and **${staminaLoss} Stamina**!`)
+                    .setColor('#DC2626');
             }
 
             message.channel.send({ embeds: [embed] });

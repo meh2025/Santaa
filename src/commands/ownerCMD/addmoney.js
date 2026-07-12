@@ -26,7 +26,7 @@ module.exports = {
         try {
             await dbManager.addMoney(TargetUser.id, amount);
             const addMoneyEmbed = new EmbedBuilder()
-                .setColor('#43B581')
+                .setColor('#16A34A')
                 .setTitle('Money Added!')
                 .setDescription(`Successfully added **$${amount.toLocaleString()}** to ${TargetUser.username}'s balance.`)
                 .setThumbnail(TargetUser.displayAvatarURL({ dynamic: true }))

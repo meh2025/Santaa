@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { checkCooldown, getCooldownDuration } = require('../Utils/Cooldown');
+const { checkCooldown } = require('../Utils/Cooldown');
 const { StealSuccess, StealFail, StealBusted } = require('../Utils/misc');
 
 const MIN_TARGET_BALANCE = 50; // target must have at least this much to be steal-able
@@ -26,8 +26,7 @@ module.exports = {
         }
 
         // ── Cooldown ───────────────────────────────────────────────────────
-        const cooldownMs = getCooldownDuration(this.name, 8 * 60 * 1000);
-        const timeLeft = checkCooldown(author.id, this.name, cooldownMs);
+        const timeLeft = checkCooldown(author.id, this.name);
         if (timeLeft) {
             return message.reply(`Please wait **${timeLeft}** before attempting to steal again.`);
         }
@@ -37,7 +36,7 @@ module.exports = {
             const targetData = await dbManager.getUser(targetUser.id);
             if (targetData.balance < MIN_TARGET_BALANCE) {
                 return message.reply(
-                    `${targetUser.username} is too broke to steal from. (Needs at least ${MIN_TARGET_BALANCE}🪙 in wallet)`
+                    `${targetUser.username} is too broke to steal from. (Needs at least ${MIN_TARGET_BALANCE} in wallet)`
                 );
             }
 
@@ -64,21 +63,20 @@ module.exports = {
                 await rpgManager.updateProgress(author.id, { steals: currentSteals + 1 });
 
                 embed
-                    .setTitle('🕵️ Steal Successful!')
+                    .setTitle('Steal Successful!')
                     .setDescription(
                         `${getRandom(StealSuccess)}\n\n` +
-                        `You swiped **${stolen.toLocaleString()}🪙** from ${targetUser}!`
+                        `You swiped **${stolen.toLocaleString()}** from ${targetUser}!`
                     )
                     .setColor('#16A34A');
 
             } else if (outcome === 'fail') {
                 embed
-                    .setTitle('😅 Steal Failed')
+                    .setTitle('Steal Failed')
                     .setDescription(
                         `${getRandom(StealFail)}\n\n` +
                         `You didn't get anything from ${targetUser} this time.`
-                    )
-                    .setColor('#F59E0B');
+                    );
 
             } else {
                 // Busted — lose 10–20% of own wallet + 15 stamina
@@ -94,10 +92,10 @@ module.exports = {
                 await rpgManager.updateStats(author.id, stats.health, newStamina);
 
                 embed
-                    .setTitle('🚨 Caught Red-Handed!')
+                    .setTitle('Caught Red-Handed!')
                     .setDescription(
                         `${getRandom(StealBusted)}\n\n` +
-                        `You were punished **${fine.toLocaleString()}🪙** and lost **15 Stamina**.`
+                        `You were punished **${fine.toLocaleString()}** and lost **15 Stamina**.`
                     )
                     .setColor('#DC2626');
             }

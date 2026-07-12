@@ -31,14 +31,13 @@ module.exports = {
 
                 return (
                     `${emoji} **#${rank}** — ${username}\n` +
-                    `> 🏆 ${entry.wins} W  |  💀 ${entry.losses} L  |  📊 ${rate}% WR`
+                    `> ${entry.wins} W  |  ${entry.losses} L  |  ${rate}% WR`
                 );
             }));
 
             const embed = new EmbedBuilder()
-                .setTitle('🏆 PVP Leaderboard')
+                .setTitle('PVP Leaderboard')
                 .setDescription(rows.join('\n\n'))
-                .setColor(LeaderboardConfig.Color.Gold)
                 .setFooter({ text: `Top ${leaderboard.length} fighters by all-time wins` })
                 .setTimestamp();
 

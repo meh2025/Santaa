@@ -39,7 +39,7 @@ function getFilesRecursive(dir) {
     });
     return results;
 }
-const commandFolders = ['commands', 'minigames', 'memes']; // path all command in src/
+const commandFolders = ['commands', 'minigames', 'memes'];
 
 commandFolders.forEach(folder => {
     const folderPath = path.join(__dirname, folder);
@@ -86,7 +86,7 @@ client.on('messageCreate', (message) => {
         command.execute(message, args);
     } catch (error) {
         console.error(error);
-        message.reply('There was an error trying to execute that command!'); // Error handling
+        message.reply('There was an error trying to execute that command!');
     }
 });
 
@@ -94,7 +94,7 @@ client.on('messageCreate', (message) => {
 async function connectData() {
     try {
         await dbmanager.init();
-        client.db = dbmanager; // Attach the database manager to the client for easy access in commands
+        client.db = dbmanager;
 
         const rpgmanager = require('../database/rpgmanager');
         await rpgmanager.init();
@@ -107,9 +107,9 @@ async function connectData() {
     // Login bot
     client.login(process.env.DISCORD_BOT_API_KEY).then(() => {
         // console.log('Bot token valid'); // @
-    }).catch((error) => { // Handle login errors
+    }).catch((error) => {
         console.error('Error logging in:', error); // Optionally, you can exit the process if login fails
     });
 }
 
-connectData(); // Start the bot by connecting to the database first
+connectData();
