@@ -4,7 +4,7 @@ const runJobMinigame = require('./jobs/minigameRunner');
 const buildJobResultEmbed = require('./jobs/buildJobResultEmbed');
 const { JobStart, JobSuccess, JobFail } = require('../Utils/misc');
 
-const cooldownConfig = require('../Utils/cooldownConfig');
+const cooldownConfig = require('../Utils/config');
 const TEST_MONTH_WORK_REQUIREMENT = 10;
 const TEST_FIRST_BONUS_RANGE = { min: 30, max: 40 };
 const TEST_MONTH_PAY = 300;

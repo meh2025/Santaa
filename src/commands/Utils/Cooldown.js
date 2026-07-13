@@ -1,5 +1,5 @@
 const { Collection } = require('discord.js');
-const cooldownConfig = require('./cooldownConfig');
+const cooldownConfig = require('./config');
 
 const cooldown = new Collection();
 

@@ -1,13 +1,14 @@
 const { EmbedBuilder } = require('discord.js');
-const { jobs , jobs_txt} = require('../Utils/tips'); // Import job from tips.js
+const { jobs, jobs_txt } = require('../Utils/tips'); // Import job from tips.js
 const { checkCooldown } = require('../Utils/Cooldown'); // Import cooldown function from Cooldown.js
+const { CURRENCY_EMOJI } = require('../Utils/config');
 
 module.exports = {
     name: 'parttime',
     description: 'Do part-time work cuz u unemployed final boss (4 minute cooldown)',
     category: 'eco',
     async execute(message) {
-        const { client , author } = message;
+        const { client, author } = message;
         const dbManager = message.client.db;
 
         // Cooldown
@@ -29,13 +30,13 @@ module.exports = {
 
             // work embed
             const workEmbed = new EmbedBuilder()
-                .setAuthor({ 
-                    name: message.author.username, 
-                    iconURL: message.author.displayAvatarURL() 
+                .setAuthor({
+                    name: message.author.username,
+                    iconURL: message.author.displayAvatarURL()
                 })
                 .setDescription(
                     `**${randJob.name}**` +
-                    ` and you earned **${amountEarned.toLocaleString()}**!\n\n` +
+                    ` and you earned **${amountEarned.toLocaleString()}${CURRENCY_EMOJI}**!\n\n` +
                     `*"${jobQuote}"*`
                 )
                 .setTimestamp();

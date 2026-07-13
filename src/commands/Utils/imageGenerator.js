@@ -1,4 +1,5 @@
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { CURRENCY_SYMBOL } = require('./config');
 
 // Colors
 const bgColor = '#1E1E2E';
@@ -67,7 +68,7 @@ async function generateLevelCard(user, stats) {
     ctx.clip();
     ctx.drawImage(avatarImage, 50, 50, 150, 150);
     ctx.restore();
-    
+
     // Avatar border
     ctx.beginPath();
     ctx.arc(125, 125, 75, 0, Math.PI * 2, true);
@@ -96,7 +97,7 @@ async function generateLevelCard(user, stats) {
   ctx.fillStyle = successColor;
   ctx.font = '24px sans-serif';
   ctx.fillText(`ATK: ${stats.totalAttack}`, 380, 130);
-  
+
   ctx.fillStyle = dangerColor;
   ctx.fillText(`DEF: ${stats.totalDefense}`, 500, 130);
 
@@ -104,7 +105,7 @@ async function generateLevelCard(user, stats) {
   const expRequired = stats.level * 100;
   const currentExp = stats.exp;
   const progress = Math.min(Math.max(currentExp / expRequired, 0), 1);
-  
+
   const barX = 230;
   const barY = 160;
   const barWidth = 520;
@@ -126,7 +127,7 @@ async function generateLevelCard(user, stats) {
   ctx.font = '16px sans-serif';
   ctx.textAlign = 'right';
   ctx.fillText(`${currentExp} / ${expRequired} EXP`, barX + barWidth - 10, barY - 10);
-  
+
   // Reset align
   ctx.textAlign = 'left';
 
@@ -147,7 +148,7 @@ async function generateLeaderboardImage(title, rows, page, totalPages) {
   const rowHeight = 70;
   const paddingY = 120;
   const canvasHeight = Math.max(300, (rows.length * rowHeight) + paddingY);
-  
+
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext('2d');
 
@@ -208,7 +209,92 @@ async function generateLeaderboardImage(title, rows, page, totalPages) {
   return canvas.toBuffer('image/png');
 }
 
+/**
+ * Generate a Balance Card image
+ * @param {String} displayName  The user's display name
+ * @param {Object} user         Discord User object (for avatar)
+ * @param {Object} data         { balance, bank, inventoryValue, totalAssets }
+ * @returns {Buffer} Image Buffer
+ */
+async function generateBalanceCard(displayName, user, data) {
+  const canvas = createCanvas(800, 320);
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = bgColor;
+  roundRect(ctx, 0, 0, canvas.width, canvas.height, 20, true, false);
+
+  // Avatar
+  let avatarImage;
+  try {
+    const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 256 });
+    avatarImage = await loadImage(avatarUrl);
+  } catch (_) { }
+
+  if (avatarImage) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(100, 100, 70, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(avatarImage, 30, 30, 140, 140);
+    ctx.restore();
+    // Border
+    ctx.beginPath();
+    ctx.arc(100, 100, 70, 0, Math.PI * 2, true);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = accentColor;
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = cardColor;
+    ctx.beginPath();
+    ctx.arc(100, 100, 70, 0, Math.PI * 2, true);
+    ctx.fill();
+  }
+
+  // Name
+  ctx.fillStyle = textColor;
+  ctx.font = 'bold 34px sans-serif';
+  ctx.fillText(displayName, 200, 70);
+
+  // Separator
+  ctx.fillStyle = cardColor;
+  ctx.fillRect(200, 85, 560, 2);
+
+  // Stat rows: label | value
+  const stats = [
+    { label: 'Wallet', value: `${Number(data.balance).toLocaleString()}${CURRENCY_SYMBOL}`, color: accentColor },
+    { label: 'Bank', value: `${Number(data.bank).toLocaleString()}${CURRENCY_SYMBOL}`, color: successColor },
+    { label: 'Inventory', value: `${Number(data.inventoryValue).toLocaleString()}${CURRENCY_SYMBOL}`, color: '#CBA6F7' },
+    { label: 'Net Worth', value: `${Number(data.totalAssets).toLocaleString()}${CURRENCY_SYMBOL}`, color: '#F9E2AF' },
+  ];
+
+  const statStartY = 110;
+  const statRowH = 48;
+  stats.forEach((s, i) => {
+    const y = statStartY + i * statRowH;
+    // row bg
+    if (i % 2 === 0) {
+      ctx.fillStyle = cardColor;
+      roundRect(ctx, 195, y - 5, 565, statRowH - 6, 8, true, false);
+    }
+    ctx.fillStyle = subTextColor;
+    ctx.font = '20px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(s.label, 210, y + 28);
+
+    ctx.fillStyle = s.color;
+    ctx.font = 'bold 24px "Segoe UI Emoji", "Arial Unicode MS", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(s.value, 750, y + 28);
+  });
+
+  ctx.textAlign = 'left';
+  return canvas.toBuffer('image/png');
+}
+
 module.exports = {
   generateLevelCard,
-  generateLeaderboardImage
+  generateLeaderboardImage,
+  generateBalanceCard
 };

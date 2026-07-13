@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { checkCooldown } = require('../Utils/Cooldown');
 const { NPC, BegSuccess, BegFail, BegStolen } = require('../Utils/misc');
+const { CURRENCY_EMOJI } = require('../Utils/config');
 
 module.exports = {
     name: 'beg',
@@ -35,11 +36,11 @@ module.exports = {
 
         try {
             if (chance === 1) {
-                    await dbManager.addMoney(author.id, amount, { trackEarning: true });
+                await dbManager.addMoney(author.id, amount, { trackEarning: true });
                 const randomNPC = getRandom(NPC);
 
                 embed.setTitle('Begged for money!')
-                    .setDescription(`${randomSuccess} ${randomNPC} come in and they throw money at your face! You got **${amount.toLocaleString()}**!`)
+                    .setDescription(`${randomSuccess} ${randomNPC} come in and they throw money at your face! You got **${amount.toLocaleString()}${CURRENCY_EMOJI}**!`)
 
             } else if (chance === 2) {
                 const randomFail = getRandom(BegFail);
@@ -51,7 +52,7 @@ module.exports = {
                 const randomStolen = getRandom(BegStolen);
 
                 embed.setTitle('Oh no! You got robbed!')
-                    .setDescription(`${randomStolen}\n\nYou lost **${amount.toLocaleString()}**!`)
+                    .setDescription(`${randomStolen}\n\nYou lost **${amount.toLocaleString()}${CURRENCY_EMOJI}**!`)
             }
             message.channel.send({ embeds: [embed] });
 

@@ -1,4 +1,5 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { generateBalanceCard } = require('../Utils/imageGenerator');
 
 module.exports = {
     name: 'balance',
@@ -8,27 +9,21 @@ module.exports = {
         const { author, client } = message;
         const dbManager = client.db;
         const name = message.member?.displayName || author.username;
-        const userData = await dbManager.getUser(author.id);
-        const netWorth = userData.balance + userData.bank;
 
-        const balanceEmbed = data => {
-            return new EmbedBuilder()
-                .setTitle(`${name}'s Balance`)
-                .addFields(
-                    { name: '🪙', value: `${data.balance.toLocaleString()}`, inline: false },
-                    { name: '🏦', value: `${data.bank.toLocaleString()}`, inline: false },
-                    { name: '📦', value: `${data.inventoryValue.toLocaleString()}`, inline: false },
-                    { name: '💰', value: `${data.totalAssets.toLocaleString()}`, inline: false }
-                    // { name: '⭐ Lifetime Earned', value: `${data.totalEarned.toLocaleString()}`, inline: false } // Currently disabled due to useless data
-                );
+        const buildBalanceData = async () => {
+            const userData = await dbManager.getUser(author.id);
+            const inventoryValue = await dbManager.getInventoryValue(author.id);
+            return {
+                ...userData,
+                inventoryValue,
+                totalAssets: Number(userData.balance) + Number(userData.bank) + Number(inventoryValue),
+                totalEarned: Number(userData.total_earned || 0)
+            };
         };
 
-        const inventoryValue = await dbManager.getInventoryValue(message.author.id);
-        const balanceData = {
-            ...userData,
-            inventoryValue,
-            totalAssets: Number(userData.balance) + Number(userData.bank) + Number(inventoryValue),
-            totalEarned: Number(userData.total_earned || 0)
+        const buildAttachment = async (data) => {
+            const buf = await generateBalanceCard(name, author, data);
+            return new AttachmentBuilder(buf, { name: 'balance.png' });
         };
 
         // Withdraw and deposit buttons
@@ -37,7 +32,10 @@ module.exports = {
             new ButtonBuilder().setCustomId('with_modal').setLabel('Withdraw').setStyle(ButtonStyle.Secondary)
         );
 
-        const response = await message.channel.send({ embeds: [balanceEmbed(balanceData)], components: [row] });
+        const balanceData = await buildBalanceData();
+        const attachment = await buildAttachment(balanceData);
+
+        const response = await message.channel.send({ files: [attachment], components: [row] });
 
         const collector = response.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, componentType: ComponentType.Button });
 
@@ -82,14 +80,9 @@ module.exports = {
                     await dbManager.addMoney(message.author.id, amount);
                 }
 
-                const newUserData = await dbManager.getUser(message.author.id);
-                const newBalanceData = {
-                    ...newUserData,
-                    inventoryValue: await dbManager.getInventoryValue(message.author.id),
-                    totalAssets: Number(newUserData.balance) + Number(newUserData.bank) + await dbManager.getInventoryValue(message.author.id),
-                    totalEarned: Number(newUserData.total_earned || 0)
-                };
-                await submit.update({ embeds: [balanceEmbed(newBalanceData)] });
+                const newData = await buildBalanceData();
+                const newAttachment = await buildAttachment(newData);
+                await submit.update({ files: [newAttachment], attachments: [] });
             }
         });
 

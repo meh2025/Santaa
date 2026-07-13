@@ -1,5 +1,6 @@
-const {EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { checkCooldown } = require('../Utils/Cooldown');
+const { CURRENCY_EMOJI } = require('../Utils/config');
 
 module.exports = {
     name: 'daily',
@@ -7,7 +8,7 @@ module.exports = {
     category: 'eco',
     async execute(message) {
         // Database manager
-        const { client , author } = message;
+        const { client, author } = message;
         const dbManager = message.client.db;
 
         // Cooldown
@@ -24,7 +25,7 @@ module.exports = {
             await dbManager.addMoney(message.author.id, dailyReward, { trackEarning: true });
             const dailyEmbed = new EmbedBuilder()
                 .setTitle('Daily Reward Claimed!')
-                .setDescription(`You have claimed your daily reward of **${dailyReward.toLocaleString()}**, come back tomorrow for more!`)
+                .setDescription(`You have claimed your daily reward of **${dailyReward.toLocaleString()}${CURRENCY_EMOJI}**, come back tomorrow for more!`)
                 .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
                 .setTimestamp();
             message.channel.send({ embeds: [dailyEmbed] });

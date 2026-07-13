@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { checkCooldown } = require('../Utils/Cooldown');
 const { StealSuccess, StealFail, StealBusted } = require('../Utils/misc');
+const { CURRENCY_EMOJI } = require('../Utils/config');
 
 const MIN_TARGET_BALANCE = 50; // target must have at least this much to be steal-able
 
@@ -36,7 +37,7 @@ module.exports = {
             const targetData = await dbManager.getUser(targetUser.id);
             if (targetData.balance < MIN_TARGET_BALANCE) {
                 return message.reply(
-                    `${targetUser.username} is too broke to steal from. (Needs at least ${MIN_TARGET_BALANCE} in wallet)`
+                    `${targetUser.username} is too broke to steal from. (Needs at least **${MIN_TARGET_BALANCE}${CURRENCY_EMOJI}** in wallet)`
                 );
             }
 
@@ -44,9 +45,9 @@ module.exports = {
             const roll = Math.floor(Math.random() * 100) + 1;
             // 30% success, 40% fail, 30% busted
             let outcome;
-            if (roll <= 30)       outcome = 'success';
-            else if (roll <= 70)  outcome = 'fail';
-            else                  outcome = 'busted';
+            if (roll <= 30) outcome = 'success';
+            else if (roll <= 70) outcome = 'fail';
+            else outcome = 'busted';
 
             const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
             const embed = new EmbedBuilder()
@@ -66,7 +67,7 @@ module.exports = {
                     .setTitle('Steal Successful!')
                     .setDescription(
                         `${getRandom(StealSuccess)}\n\n` +
-                        `You swiped **${stolen.toLocaleString()}** from ${targetUser}!`
+                        `You swiped **${stolen.toLocaleString()}${CURRENCY_EMOJI}** from ${targetUser}!`
                     )
                     .setColor('#16A34A');
 
