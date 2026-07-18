@@ -1,4 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const packageInfo = require('../../../package.json');
 require('dotenv').config();
 const { getMenuRow, getPaginationRow, getOptions } = require('../Utils/NavigateManager');
 
@@ -26,7 +27,7 @@ module.exports = {
         const helpEmbed = new EmbedBuilder()
             .setAuthor({ name: 'HELP MENU', iconURL: message.client.user.displayAvatarURL() })
             .addFields({ name: '', value: 'To get more information about a command, use `Zhelp <command>`', inline: false })
-            .setFooter({ text: `${process.env.BOT_VER} ${process.env.TYPE} | meh23_.`})
+            .setFooter({ text: `v${packageInfo.version} ${packageInfo.releaseType} | ${packageInfo.author}` });
 
         // Menu row — show Owner option only for bot owner
         const menuOptions = isOwner
