@@ -3,28 +3,86 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getRandomFish, calculateExp } = require('./fishCore');
 const rpgmanager = require('../../../database/rpgmanager');
-const { checkCooldown } = require('../../commands/Utils/Cooldown');
+const { checkCooldown, getCooldownDuration } = require('../../commands/Utils/Cooldown');
 
-const fishCounts = new Map(); // userId -> count
+const fishCounts = new Map(); // userId -> { count, cooldownUntil }
+
+function getFishLimitState(userId) {
+    const existing = fishCounts.get(userId);
+    if (existing) {
+        return existing;
+    }
+
+    const state = { count: 0, cooldownUntil: 0 };
+    fishCounts.set(userId, state);
+    return state;
+}
+
+function resetFishLimit(userId) {
+    fishCounts.delete(userId);
+}
+
+function checkFishLimit(userId, { markCatch = false } = {}) {
+    const state = getFishLimitState(userId);
+    const now = Date.now();
+
+    if (state.cooldownUntil && now < state.cooldownUntil) {
+        const remainingSeconds = Math.ceil((state.cooldownUntil - now) / 1000);
+        const minute = Math.floor(remainingSeconds / 60);
+        const second = remainingSeconds % 60;
+        const cooldownText = minute > 0 ? `${minute}m ${second}s` : `${second}s`;
+
+        return {
+            allowed: false,
+            message: `🎣 You're exhausted! Please wait **${cooldownText}** before fishing again.`
+        };
+    }
+
+    if (state.cooldownUntil && now >= state.cooldownUntil) {
+        state.cooldownUntil = 0;
+        state.count = 0;
+        fishCounts.set(userId, state);
+    }
+
+    if (state.count >= 5) {
+        const duration = getCooldownDuration('fish_exhaustion');
+        if (typeof duration === 'number' && duration > 0) {
+            state.cooldownUntil = now + duration;
+            fishCounts.set(userId, state);
+            checkCooldown(userId, 'fish_exhaustion');
+
+            const remainingSeconds = Math.ceil(duration / 1000);
+            const minute = Math.floor(remainingSeconds / 60);
+            const second = remainingSeconds % 60;
+            const cooldownText = minute > 0 ? `${minute}m ${second}s` : `${second}s`;
+
+            return {
+                allowed: false,
+                message: `🎣 You've reached the fishing limit. Please wait **${cooldownText}** before fishing again.`
+            };
+        }
+    }
+
+    if (markCatch) {
+        state.count += 1;
+        fishCounts.set(userId, state);
+    }
+
+    return { allowed: true, message: null };
+}
 
 module.exports = {
     name: 'fish',
     description: 'Start fishing for rare fish!',
     category: 'mie',
+    resetFishLimit,
+    checkFishLimit,
     async execute(message, args) {
         const userId = message.author.id;
 
-        // 1. Check if the user has reached the 5-catch limit
-        const count = fishCounts.get(userId) || 0;
-        if (count >= 5) {
-            // If cooldown already active, inform user. If not, this call will set the cooldown and we should inform the user.
-            const cooldownTime = checkCooldown(userId, 'fish_exhaustion');
-            if (cooldownTime) {
-                return message.reply(`🎣 You're exhausted! Please wait **${cooldownTime}** before fishing again.`);
-            } else {
-                // checkCooldown set the cooldown now (first time exceeding limit)
-                return message.reply(`🎣 You've reached the hourly fishing limit. Please wait 1 hour before fishing again.`);
-            }
+        const limitStatus = checkFishLimit(userId);
+        if (!limitStatus.allowed) {
+            return message.reply(limitStatus.message);
         }
 
         let gameState = 'IDLE'; // IDLE, WAITING, BITING
@@ -50,6 +108,17 @@ module.exports = {
 
         collector.on('collect', async i => {
             if (i.customId === 'cast_line' && gameState === 'IDLE') {
+                const limitStatus = checkFishLimit(userId);
+                if (!limitStatus.allowed) {
+                    await i.update({
+                        content: limitStatus.message,
+                        embeds: [],
+                        components: []
+                    });
+                    collector.stop();
+                    return;
+                }
+
                 gameState = 'WAITING';
 
                 await i.update({
@@ -108,8 +177,7 @@ module.exports = {
                 gameState = 'IDLE';
 
                 // Increment catch count
-                const currentCount = fishCounts.get(userId) || 0;
-                fishCounts.set(userId, currentCount + 1);
+                checkFishLimit(userId, { markCatch: true });
 
                 const fish = getRandomFish();
                 if (!fish) {
