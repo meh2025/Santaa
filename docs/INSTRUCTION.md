@@ -97,10 +97,12 @@ module.exports = {
     name: 'Stone',
     sell: 10,
     desc: 'Item description',
-    type: 'sellable',
+    type: 'consumable', 'sellable'
 };
-```
 
+// By default, if the item belongs to only one type or than other types (such as equippable, consumable...) that are not related to:
+// SELLABLE, UNSELLABLE, UNTRADEABLE-SELLABLE, UNTRADEABLE-UNSELLABLE, it will be default cannot be sold (but can still be traded).
+```
 ## 5. Minigames System (`src/minigames`)
 
 Complex minigames are usually divided into 3 parts:
