@@ -36,10 +36,15 @@ let bossProfilesCache = loadBossProfiles();
 
 const bossesMemoryDir = path.join(__dirname, '../../../../database/bosses_memory');
 
-function createBossTrainer(bossId, playerId) {
-  if (!fs.existsSync(bossesMemoryDir)) {
-    fs.mkdirSync(bossesMemoryDir, { recursive: true });
+function ensureBossesMemoryDir(targetDir = bossesMemoryDir) {
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
   }
+  return targetDir;
+}
+
+function createBossTrainer(bossId, playerId) {
+  ensureBossesMemoryDir();
 
   const memoryFile = path.join(bossesMemoryDir, `${bossId}_${playerId}.json`);
   
@@ -71,4 +76,4 @@ function getBossProfile(id) {
   return profiles.find(profile => profile.id === normalized || profile.name.toLowerCase() === normalized || profile.title.toLowerCase() === normalized) || profiles[0];
 }
 
-module.exports = { bossProfiles: bossProfilesCache, getBossProfiles, getBossProfile, createBossTrainer };
+module.exports = { bossProfiles: bossProfilesCache, getBossProfiles, getBossProfile, createBossTrainer, ensureBossesMemoryDir };

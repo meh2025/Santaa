@@ -1,4 +1,23 @@
-# v1.1.0 STABLE
+# v1.1.1-alpha.1.260719
+- Move all item (including from shop, fish, mine) to a single folder to easy managing
+- Automatic create bosses_memory if it dont exists
+- Updating some stuff on changelog
+
+# v1.1.1-alpha.0.260718
+- Remove version and type in .env
+- Just create a new tree
+
+# CHANGELOG
+# v1.1.1 7.xx.2026
+- Adding selling system (SELLABLE, UNSELLABLE and UNTRADEABLE for both)
+- WANTED Level while using crime/steal command
+- Add Death/hospitalization when reach 0 health/stamina
+- Upgrade crime.js
+- Add help command search
+- add more item (again)
+- No bug found currently
+
+# v1.1.0 - 7.18.2026
 - Adding more jobs
 - Add begging discord user and yourself (lol)
 - Update some stuff on random text
@@ -6,21 +25,21 @@
 - No bug found currently
 - Imma add selling item rn yall wait next update 
 
-# v1.0.3 STABLE
+# v1.0.3 - 7.13.2026
 - Upgrade balance (like leaderboard and level)
 - Fix cooldown again
 - Unify currency
 
-# v1.0.2 STABLE
+# v1.0.2 - 7.12.2026
 - Upgrade leaderboard and level command (become image no text lol)
 - Fix cooldown and some stuff
 
-# v1.0.1 STABLE
+# v1.0.1 - 7.7.2026
 - Upgrade overall bot information
 - Add CHANGELOG.json to show bot changelog
 - upgrade and fix stuff on PVP history and ranking
 
-# v1.0.0 STABLE - 7.4.2026
+# v1.0.0 - 7.4.2026
 - Add fishing and mining minigames (currently selling item not working)
 - Add PVP history and ranking, solo with bot (Still an dumb AI)
 - Add equip 3 item limit feature and a lot of item
@@ -31,14 +50,14 @@
 - Fixing networth balance, cooldown time
 - Fix another issues known
 
-# v1.0.0 BETA TEST #7.3.26-11H00Mpm
+# v1.0.0-beta.5.260703
 - Add 2 minigames (guess meme [Required a lot of image, gif to use], Olympac [Running])
 - PVP with bot (like fighting boss)
 - Add leaderboad (Total money + inventory value, highest level, total battle win, total steal,...)
 - Optimize job embed
 - Improve and add cooldown config on cooldown.js (For testing: it will run test cooldown for faster test, for normally: use prod cooldown)
 
-# v1.0.0 BETA TEST #7.1.26-3H59Mpm
+# v1.0.0-beta.4.260701
 - Improve jobs embed and minigames:
     + Penalty with GK and ball, team goal emoji
     + Improve random text (misc.js)
@@ -47,21 +66,21 @@
 - add steal commands
 - PVP History and ranking
 
-# v1.0.0 BETA TEST #7.1.26-7H40Mam
+# v1.0.0-beta.3.260701
 - Add basic jobs system
 - Fixing networth balance and cooldowns
 
-# v1.0.0 BETA TEST #6.29.26-12H11Mam
+# v1.0.0-beta.2.260629
 - Fix issue in fishing cooldown
 - Add equip 3 item limit feature
 - Fix another issues known
 
-# v1.0.0 BETA TEST #6.28.26-5H55Mpm
+# v1.0.0-beta.1.260628
 - Add mining minigames
 - Improve and add mythic items for fishing
 - Change rarity chance both mining and fishing
 
-# V1.0.0 BETA TEST #6.26.26-8H36Mpm
+# V1.0.0-beta.0.260626
 - Add fishing (Cooldown and selling fish currently not working)
 - new method to earn money: beg and crime
 - Adding a lot of item

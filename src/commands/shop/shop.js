@@ -33,6 +33,14 @@ module.exports = {
         const response = await message.channel.send({ embeds: [mainEmbed], components: [row] });
         const collector = response.createMessageComponentCollector({ time: 60000 });
 
+        const resolveShopItemsPath = (shopType) => {
+            const candidates = [
+                path.join(__dirname, '..', '..', 'items', 'shopItems', shopType),
+                path.join(__dirname, 'shopUtils', shopType)
+            ];
+            return candidates.find(candidate => fs.existsSync(candidate)) || candidates[0];
+        };
+
         collector.on('collect', async (i) => {
             if (i.user.id !== message.author.id) return i.reply({ content: 'Not your menu!', ephemeral: true });
 
@@ -81,11 +89,11 @@ module.exports = {
                     return;
                 }
 
-                // Load items from shopUtils/[shopType]
-                const shopUtilsPath = path.join(__dirname, 'shopUtils', shopType);
+                // Load items from items/shopItems/[shopType]
+                const shopItemsPath = resolveShopItemsPath(shopType);
                 let itemFiles = [];
                 try {
-                    itemFiles = fs.readdirSync(shopUtilsPath).filter(file => file.endsWith('.js'));
+                    itemFiles = fs.readdirSync(shopItemsPath).filter(file => file.endsWith('.js'));
                 } catch (err) {
                     console.error(err);
                 }
@@ -97,7 +105,7 @@ module.exports = {
 
                 const shopItemEntries = [];
                 for (const file of itemFiles) {
-                    const item = require(`./shopUtils/${shopType}/${file}`);
+                    const item = require(path.join(shopItemsPath, file));
                     shopItems.set(item.id, item);
                     shopItemEntries.push(item);
                 }

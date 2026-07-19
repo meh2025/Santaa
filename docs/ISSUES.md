@@ -12,7 +12,7 @@
     3. Notice that the cooldown is not triggered
 
 ### [ISSUES-002]: sell item
- - **Status**: Reviewed
+ - **Status**: Fixed
  - **Detail**: Selling currently not added but some item have type "sellable" have sell button that Im accidentally add
 
 ### [ISSUES-003]: fish.js in wrong locate

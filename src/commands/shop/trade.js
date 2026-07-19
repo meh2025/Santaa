@@ -11,11 +11,18 @@ const TRADE_TIMEOUT = 120_000; // 2 minutes
 
 /** Load all known items into a Map<id, itemData> */
 const loadItems = () => {
-    const shopUtilsPath = path.join(__dirname, 'shopUtils');
+    const shopItemsRoot = path.join(__dirname, '..', '..', 'items', 'shopItems');
+    const legacyShopItemsRoot = path.join(__dirname, 'shopUtils');
     const allItems = new Map();
     const dirs = ['gepora', 'kimori'];
+
+    const resolveDir = (basePath, dirName) => {
+        const candidates = [path.join(basePath, dirName), path.join(legacyShopItemsRoot, dirName)];
+        return candidates.find(candidate => fs.existsSync(candidate)) || candidates[0];
+    };
+
     for (const d of dirs) {
-        const dirPath = path.join(shopUtilsPath, d);
+        const dirPath = resolveDir(shopItemsRoot, d);
         if (!fs.existsSync(dirPath)) continue;
         for (const file of fs.readdirSync(dirPath).filter(f => f.endsWith('.js'))) {
             const item = require(path.join(dirPath, file));

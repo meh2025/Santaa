@@ -44,7 +44,7 @@ cp exampleenv.txt .env
 copy exampleenv.txt .env
 ```
 Open .env and put in your full information.
-Also, create a folder called bosses_memory inside database/ for the PVP AI Bosses. it's mandatory (Gonna fix it in v1.1.1 STABLE)
+Also, create a folder called bosses_memory inside database/ for the PVP AI Bosses. it's mandatory
 
 Finally, We only have single way to run this bot:
 ```

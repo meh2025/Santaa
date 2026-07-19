@@ -19,8 +19,16 @@ const fishData = {
     MYTHIC: []
 };
 
+const resolveFishBaseDir = () => {
+    const candidates = [
+        path.join(__dirname, '..', '..', 'items', 'fish'),
+        path.join(__dirname, 'fish')
+    ];
+    return candidates.find(candidate => fs.existsSync(candidate)) || candidates[0];
+};
+
 const loadFish = () => {
-    const fishBaseDir = path.join(__dirname, 'fish');
+    const fishBaseDir = resolveFishBaseDir();
     const rarities = Object.keys(RARITY_CONFIG);
 
     for (const rarity of rarities) {

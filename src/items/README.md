@@ -1,0 +1,1 @@
+You could delete these item but NOT delete the folder

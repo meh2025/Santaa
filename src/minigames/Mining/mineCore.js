@@ -12,8 +12,16 @@ const RARITY_CONFIG = {
 
 const mineralData = { COMMON: [], UNCOMMON: [], RARE: [], EPIC: [], LEGENDARY: [], MYTHIC: [] };
 
+const resolveMineralsBaseDir = () => {
+    const candidates = [
+        path.join(__dirname, '..', '..', 'items', 'mine'),
+        path.join(__dirname, 'minerals')
+    ];
+    return candidates.find(candidate => fs.existsSync(candidate)) || candidates[0];
+};
+
 const loadMinerals = () => {
-    const baseDir = path.join(__dirname, 'minerals');
+    const baseDir = resolveMineralsBaseDir();
     for (const rarity of Object.keys(RARITY_CONFIG)) {
         const rarityDir = path.join(baseDir, rarity.charAt(0) + rarity.slice(1).toLowerCase());
         if (fs.existsSync(rarityDir)) {

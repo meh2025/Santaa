@@ -3,15 +3,21 @@ const path = require('path');
 const fs = require('fs');
 
 /**
- * Loads all item definitions from shopUtils directories.
+ * Loads all item definitions from the unified items folders.
  */
 const loadItems = () => {
-    const shopUtilsPath = path.join(__dirname, '..', 'shop', 'shopUtils');
     const allItems = new Map();
     const dirs = ['gepora', 'kimori'];
+    const shopItemsRoot = path.join(__dirname, '..', 'shop', '..', '..', 'items', 'shopItems');
+    const legacyShopItemsRoot = path.join(__dirname, '..', 'shop', 'shopUtils');
+
+    const resolveDir = (basePath, dirName) => {
+        const candidates = [path.join(basePath, dirName), path.join(legacyShopItemsRoot, dirName)];
+        return candidates.find(candidate => fs.existsSync(candidate)) || candidates[0];
+    };
 
     for (const d of dirs) {
-        const dirPath = path.join(shopUtilsPath, d);
+        const dirPath = resolveDir(shopItemsRoot, d);
         if (fs.existsSync(dirPath)) {
             const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.js'));
             for (const file of files) {
@@ -21,9 +27,11 @@ const loadItems = () => {
         }
     }
     const targets = [
+        path.join(__dirname, '..', '..', 'items', 'mine'),
         path.join(__dirname, '..', '..', 'minigames', 'Mining', 'minerals'),
+        path.join(__dirname, '..', '..', 'items', 'fish'),
         path.join(__dirname, '..', '..', 'minigames', 'Fishing', 'fish')
-    ]
+    ];
 
     for (const targetPath of targets) {
         if (!fs.existsSync(targetPath)) continue;
