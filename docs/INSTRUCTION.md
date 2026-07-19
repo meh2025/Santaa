@@ -67,6 +67,9 @@ The bot recursively scans all `.js` files in these folders
 1. **Create file:** Example `src/commands/MainCMD/hello.js` (Note: Creating a .js file directly inside the root commands folder is not recommended)
 2. **Export structure:**
 ```js
+
+// Add import or some function here, Make sure you move module.export at bottom
+
 module.exports = {
   name: 'hello',
   description: 'Bot greeting command',
@@ -105,6 +108,8 @@ Complex minigames are usually divided into 3 parts:
 - **UI (`...UI.js` or `...Board.js`):** Handles display and message formatting for the user.
 - **List (`...list.js`):** List of items/rewards that can be obtained.
 - **Main (`...js`):** Main command file connecting Core and UI.
+
+Simple or other minigames type: only 1 single file .js
 
 ## 6. Data Management (Database)
 
