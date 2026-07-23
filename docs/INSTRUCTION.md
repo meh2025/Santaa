@@ -99,7 +99,7 @@ module.exports = {
     name: 'Stone',
     sell: 10,
     desc: 'You could find this somewhere at your garden',
-    type: ['consumable'],
+    type: ['consumable'], // Currently only two type: equippable and consumable
     is_sellable: true,
     is_tradeable: true,
 };
@@ -113,6 +113,7 @@ Complex minigames are usually divided into 3 parts:
 - **Core (`...Core.js`):** Handles main logic and calculations
 - **UI (`...UI.js` or `...Board.js`):** Handles display and message formatting for the user
 - **Main (`...js`):** Main command file connecting Core and UI
+
 (for ...list.js like fishlist or minelist, its just a list of items)
 
 Simple or other minigames type: only 1 single file .js
@@ -145,5 +146,5 @@ Manages role-playing elements:
 - Do not delete files without checking if they are imported anywhere
 
 ### ✅ THINGS TO DO
-- [ ] Remove all custom emojis (in `commands/utils/NavigateManager.js` and related button functions)
+- [ ] Remove all navigate button emojis (in `commands/utils/NavigateManager.js`)
 - [ ] Update emoji currency via `config.js` in the same folder

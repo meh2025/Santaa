@@ -4,19 +4,25 @@ const getOptions = () => {
     // Help.js
     const options = [
         { label: 'All', value: 'all', description: 'View all available commands' },
-        { label: 'General', value: 'gnr', emoji: '<:check:1502935345598300301>' },  // change this to your custom emoji
-        { label: 'Economic', value: 'eco', emoji: '<:check:1502935333426430074>' },  // change this to your custom emoji
-        { label: 'Utils', value: 'utl', emoji: '<:check:1518787835686031491>' },  // change this to your custom emoji
-        { label: 'Minigames', value: 'mie', emoji: '<:check:1518965605829578934>' },  // change this to your custom emoji
+        { label: 'General', value: 'gnr' },
+        { label: 'Economic', value: 'eco' },
+        { label: 'Utils', value: 'utl' },
+        { label: 'Minigames', value: 'mie' },
     ];
     options.push({ label: 'Unknown', value: 'gau3', emoji: '❓' });
     return options;
 };
 
-const getMenuRow = (customId, customOptions = null) => {
+// Select Options
+const getMenuRow = (customId, customOptions = null, maxValues = 1, minValues = 1) => {
     const options = customOptions || getOptions();
     return new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder().setCustomId(customId).setPlaceholder('Select a category').addOptions(options)
+        new StringSelectMenuBuilder()
+            .setCustomId(customId)
+            .setPlaceholder('Select a category')
+            .setMinValues(minValues)
+            .setMaxValues(maxValues)
+            .addOptions(options)
     );
 };
 
@@ -45,4 +51,13 @@ const getPaginationRow = (currentPage, totalPages) => {
     );
 };
 
-module.exports = { getOptions, getMenuRow, getPaginationRow };
+const applySelectMenuDefaults = (options, selectedValues) => {
+    if (!selectedValues) return options;
+    const selectedArray = Array.isArray(selectedValues) ? selectedValues : [selectedValues];
+    return options.map(opt => ({
+        ...opt,
+        default: selectedArray.includes(opt.value)
+    }));
+};
+
+module.exports = { getOptions, getMenuRow, getPaginationRow, applySelectMenuDefaults };

@@ -3,8 +3,7 @@ const rpgmanager = require('../../../database/rpgmanager');
 const dbmanager = require('../../../database/dbmanager');
 const fs = require('fs');
 const path = require('path');
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
+const { applySelectMenuDefaults } = require('../Utils/NavigateManager');
 
 const ITEMS_PER_PAGE = 25; // Discord Select Menu limit
 const TRADE_TIMEOUT = 120_000; // 2 minutes
@@ -63,18 +62,19 @@ const buildTradeEmbed = (userA, userB, offerA, offerB, moneyA, moneyB, bankA, ba
 };
 
 /** Build Select Menu rows for a user's inventory page */
-const buildSelectRows = (inventoryItems, page, side, username) => {
+const buildSelectRows = (inventoryItems, page, side, username, selectedId) => {
     const rows = [];
     const totalPages = Math.max(1, Math.ceil(inventoryItems.length / ITEMS_PER_PAGE));
     const start = page * ITEMS_PER_PAGE;
     const pageItems = inventoryItems.slice(start, start + ITEMS_PER_PAGE);
 
     if (pageItems.length > 0) {
-        const options = pageItems.map((item, idx) => ({
+        let options = pageItems.map((item, idx) => ({
             label: `${start + idx + 1}. ${item.item_name}`,
             value: item.id.toString(),
             description: `ID: ${item.item_id}`,
         }));
+        options = applySelectMenuDefaults(options, selectedId);
         rows.push(
             new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
@@ -228,8 +228,8 @@ module.exports = {
                 if (pageB >= totalPagesB) pageB = totalPagesB - 1;
 
                 // rows[0] = select menu, rows[1] = pagination (optional)
-                const rowsA = buildSelectRows(availA, pageA, 'A', userA.username);
-                const rowsB = buildSelectRows(availB, pageB, 'B', userB.username);
+                const rowsA = buildSelectRows(availA, pageA, 'A', userA.username, selectedA);
+                const rowsB = buildSelectRows(availB, pageB, 'B', userB.username, selectedB);
                 const confirmRow = buildConfirmRow();
                 const components = [];
 

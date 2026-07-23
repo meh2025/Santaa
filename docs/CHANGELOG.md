@@ -1,15 +1,18 @@
-v1.1.1-alpha.4
-REMOVE sell type: SELLABLE, UNSELLABLE, UNTRADEABLE-SELLABLE/UNSELLABLE
+v1.1.1-alpha.5
+- Add `sell all`
+- Upgrade selection options, UI for some commands
+- Allow to sell 3 items instead of one in inventory
+- Remove emoji in help commands
 
 # CHANGELOG
-# v1.1.1 - 7.2x.2026
-- Add help command search
+# v1.1.1 - 7.29.2026
+- Add help command search, `sell all`
 - Minor upgrade crime command
 - Add wanted level (affect to economy command and minigame)
 - Move all item (including from shop, fish, mine) to a single folder to easy managing
 - Automatic create bosses_memory if it dont exists
-- Updating some stuff on changelog
-- Remove version and type in .env
+- Upgrade select options, UI for some commands
+- Remove version and type in .env, emoji in help commands
 
 Alpha release: [7519dde](https://github.com/sn00bol/Santaa/commit/7519dde3e5dd81a9f77eb0677d73a6fa38dbe45f), [540afa3](https://github.com/sn00bol/Santaa/commit/540afa3058123ce03396dba54d7994a7f6a77264), [68aea7d](https://github.com/sn00bol/Santaa/commit/68aea7df00845685bddff83bc8560c9efe3e912b), [dacfc47](https://github.com/sn00bol/Santaa/commit/dacfc47b4203b17c1b1ded4301bb9a836fb0d0d0), [17ecb5d](https://github.com/sn00bol/Santaa/commit/17ecb5d4190445bb6eabefd1a08dff58dc82d12f)
 

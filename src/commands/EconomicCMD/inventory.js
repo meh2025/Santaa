@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const rpgmanager = require('../../../database/rpgmanager');
 const dbmanager = require('../../../database/dbmanager');
-const { getPaginationRow } = require('../Utils/NavigateManager');
+const { getPaginationRow, applySelectMenuDefaults } = require('../Utils/NavigateManager');
 const { getTotalStats, allItemsCache } = require('../Utils/StatsCalculator');
 const { executeSell } = require('./sell');
 
@@ -17,7 +17,7 @@ module.exports = {
         const itemsPerPage = 5;
         let totalPages = Math.max(1, Math.ceil(inventoryItems.length / itemsPerPage));
         let currentPage = 0;
-        let selectedInventoryId = null;
+        let selectedInventoryIds = [];
 
         const generateEmbedAndComponents = async (page) => {
             const userStats = await getTotalStats(message.author.id);
@@ -39,15 +39,17 @@ module.exports = {
             totalPages = Math.max(1, Math.ceil(groupedItems.length / itemsPerPage));
 
             // Stat Display
-            let desc = `**Health:** ${userStats.health} / ${userStats.maxHealth}\n`;
-            desc += `**Stamina:** ${userStats.stamina} / ${userStats.maxStamina}\n`;
-            desc += `**Attack:** ${userStats.totalAttack}\n`;
-            desc += `**Equipped:** ${userStats.equippedItemName || 'None'}\n`;
+            let desc = `❤️ **Health:** \`${userStats.health} / ${userStats.maxHealth}\`\n`;
+            desc += `⚡ **Stamina:** \`${userStats.stamina} / ${userStats.maxStamina}\`\n`;
+            desc += `⚔️ **Attack:** \`${userStats.totalAttack}\`\n`;
+            desc += `🛡️ **Equipped:** \`${userStats.equippedItemName || 'None'}\`\n`;
 
             const stats = await rpgmanager.getStats(message.author.id);
             const wantedLevel = Math.floor((stats.wanted_level || 0) / 5);
             const stars = wantedLevel > 0 ? '⭐'.repeat(wantedLevel) : '0';
-            desc += `**Wanted Level:** ${stars}\n\n`;
+            desc += `🌟 **Wanted Level:** ${stars}\n\n`;
+
+            desc += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
             const start = page * itemsPerPage;
             const currentItems = groupedItems.slice(start, start + itemsPerPage);
@@ -55,14 +57,15 @@ module.exports = {
             if (groupedItems.length === 0) {
                 desc += "*Your inventory is empty!*";
             } else {
-                desc += "**Your Items:**\n" + currentItems.map((item, index) => {
-                    return `**${start + index + 1}.** ${item.item_name} (x${item.count})`;
+                desc += "**Your Items:**\n\n" + currentItems.map((item, index) => {
+                    return `**${start + index + 1}.** ${item.item_name} \`(x${item.count})\``;
                 }).join('\n');
             }
 
 
             const embed = new EmbedBuilder()
                 .setTitle(`${message.author.username}'s Profile & Inventory`)
+                .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
                 .setDescription(desc)
                 .setFooter({ text: `Page ${page + 1} of ${totalPages} | Total items: ${inventoryItems.length}` });
 
@@ -70,57 +73,81 @@ module.exports = {
 
             if (groupedItems.length > 0) {
                 // Add Item Select Menu
-                const selectOptions = currentItems.map((item, index) => ({
+                let selectOptions = currentItems.map((item, index) => ({
                     label: `${start + index + 1}. ${item.item_name}`,
                     value: item.item_id.toString(), // the item_id
                     description: `Quantity: x${item.count}`
                 }));
+                selectOptions = applySelectMenuDefaults(selectOptions, selectedInventoryIds);
 
+                const maxSelect = Math.min(3, currentItems.length);
                 const selectRow = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
                         .setCustomId('inv_select')
-                        .setPlaceholder('Select an item to Use or Equip...')
+                        .setPlaceholder(`Select up to ${maxSelect} items...`)
+                        .setMinValues(1)
+                        .setMaxValues(maxSelect)
                         .addOptions(selectOptions)
                 );
                 components.push(selectRow);
             }
 
 
-            // Add Interaction Buttons if an item is selected
-            if (selectedInventoryId) {
-                const selectedInvItem = groupedItems.find(i => i.item_id.toString() === selectedInventoryId);
-                if (selectedInvItem) {
-                    const itemData = allItems.get(selectedInvItem.item_id);
-                    if (itemData) {
-                        const btnRow = new ActionRowBuilder();
-                        // Resolve primary type (supports both string and array)
-                        const primaryType = Array.isArray(itemData.type) ? itemData.type[0] : itemData.type;
-                        if (primaryType === 'consumable') {
-                            btnRow.addComponents(new ButtonBuilder().setCustomId('inv_use').setLabel('Use').setStyle(ButtonStyle.Success));
-                        } else if (primaryType === 'equippable') {
-                            // determine if this item_id is among equipped items
-                            const equippedArr = userStats.equippedItemsArr || [];
-                            const isEquipped = equippedArr.includes(selectedInvItem.item_id);
-                            if (isEquipped) {
-                                btnRow.addComponents(new ButtonBuilder()
-                                    .setCustomId('inv_unequip')
-                                    .setLabel('Unequip')
-                                    .setStyle(ButtonStyle.Secondary));
-                            } else {
-                                btnRow.addComponents(new ButtonBuilder()
-                                    .setCustomId('inv_equip')
-                                    .setLabel('Equip')
-                                    .setStyle(ButtonStyle.Primary));
+            // Add Interaction Buttons if items are selected
+            if (selectedInventoryIds.length > 0) {
+                // Verify all selected items still exist in inventory
+                const selectedInvItems = groupedItems.filter(i => selectedInventoryIds.includes(i.item_id.toString()));
+                
+                if (selectedInvItems.length > 0) {
+                    const btnRow = new ActionRowBuilder();
+                    
+                    if (selectedInvItems.length === 1) {
+                        // Single item logic (Use / Equip / Unequip / Sell)
+                        const selectedInvItem = selectedInvItems[0];
+                        const itemData = allItems.get(selectedInvItem.item_id);
+                        
+                        if (itemData) {
+                            const primaryType = Array.isArray(itemData.type) ? itemData.type[0] : itemData.type;
+                            if (primaryType === 'consumable') {
+                                btnRow.addComponents(new ButtonBuilder().setCustomId('inv_use').setLabel('Use').setStyle(ButtonStyle.Success));
+                            } else if (primaryType === 'equippable') {
+                                const equippedArr = userStats.equippedItemsArr || [];
+                                const isEquipped = equippedArr.includes(selectedInvItem.item_id);
+                                if (isEquipped) {
+                                    btnRow.addComponents(new ButtonBuilder()
+                                        .setCustomId('inv_unequip')
+                                        .setLabel('Unequip')
+                                        .setStyle(ButtonStyle.Secondary));
+                                } else {
+                                    btnRow.addComponents(new ButtonBuilder()
+                                        .setCustomId('inv_equip')
+                                        .setLabel('Equip')
+                                        .setStyle(ButtonStyle.Primary));
+                                }
+                            }
+                            if (itemData.is_sellable === true) {
+                                btnRow.addComponents(new ButtonBuilder().setCustomId('inv_sell').setLabel('Sell').setStyle(ButtonStyle.Danger));
                             }
                         }
-                        // Show Sell button for any item that is_sellable
-                        if (itemData.is_sellable === true) {
-                            btnRow.addComponents(new ButtonBuilder().setCustomId('inv_sell').setLabel('Sell').setStyle(ButtonStyle.Danger));
+                    } else {
+                        // Multiple item logic (Only Sell allowed if all are sellable)
+                        let allSellable = true;
+                        for (const invItem of selectedInvItems) {
+                            const iData = allItems.get(invItem.item_id);
+                            if (!iData || !iData.is_sellable) {
+                                allSellable = false;
+                                break;
+                            }
                         }
-                        if (btnRow.components.length > 0) components.push(btnRow);
+                        
+                        if (allSellable) {
+                            btnRow.addComponents(new ButtonBuilder().setCustomId('inv_sell').setLabel(`Sell ${selectedInvItems.length} Items`).setStyle(ButtonStyle.Danger));
+                        }
                     }
+
+                    if (btnRow.components.length > 0) components.push(btnRow);
                 } else {
-                    selectedInventoryId = null; // Item might have been consumed
+                    selectedInventoryIds = []; // Items might have been consumed
                 }
             }
 
@@ -140,7 +167,7 @@ module.exports = {
             if (i.user.id !== message.author.id) return i.reply({ content: 'Not your menu!', ephemeral: true });
 
             if (i.isStringSelectMenu() && i.customId === 'inv_select') {
-                selectedInventoryId = i.values[0];
+                selectedInventoryIds = i.values;
                 await i.update(await generateEmbedAndComponents(currentPage));
                 return;
             }
@@ -153,33 +180,46 @@ module.exports = {
                         case 'first': currentPage = 0; break;
                         case 'last': currentPage = totalPages - 1; break;
                     }
-                    selectedInventoryId = null; // reset selection on page change
+                    selectedInventoryIds = []; // reset selection on page change
                     await i.update(await generateEmbedAndComponents(currentPage));
                     return;
                 }
 
                 // ── Sell button (separate branch — must deferReply before any async work) ──
                 if (i.customId === 'inv_sell') {
-                    if (!selectedInventoryId) return i.reply({ content: 'Select an item first!', ephemeral: true });
-                    const itemData = allItems.get(selectedInventoryId);
-                    if (!itemData) return i.reply({ content: 'Invalid item data!', ephemeral: true });
-
-                    // Acknowledge immediately — DB ops below can take >3s
+                    if (selectedInventoryIds.length === 0) return i.reply({ content: 'Select an item first!', ephemeral: true });
+                    
                     await i.deferReply({ ephemeral: true });
 
-                    await executeSell(
-                        i.user.id,
-                        itemData,
-                        1,
-                        (content) => i.editReply(typeof content === 'string' ? { content } : content)
-                    );
-                    selectedInventoryId = null;
+                    if (selectedInventoryIds.length === 1) {
+                        const itemData = allItems.get(selectedInventoryIds[0]);
+                        if (!itemData) return i.editReply({ content: 'Invalid item data!' });
+                        await executeSell(
+                            i.user.id,
+                            itemData,
+                            1,
+                            (content) => i.editReply(typeof content === 'string' ? { content } : content)
+                        );
+                    } else {
+                        const { executeSellMultiple } = require('./sell');
+                        const itemsToSell = selectedInventoryIds.map(id => ({ itemData: allItems.get(id), quantity: 1 })).filter(x => x.itemData);
+                        await executeSellMultiple(
+                            i.user.id,
+                            itemsToSell,
+                            (content) => i.editReply(typeof content === 'string' ? { content } : content)
+                        );
+                    }
+
+                    selectedInventoryIds = [];
                     await response.edit(await generateEmbedAndComponents(currentPage));
                     return;
                 }
 
                 // ── Use / Equip / Unequip buttons ──
                 if (i.customId === 'inv_use' || i.customId === 'inv_equip' || i.customId === 'inv_unequip') {
+                    if (selectedInventoryIds.length !== 1) return i.reply({ content: 'Select exactly one item!', ephemeral: true });
+                    
+                    const selectedInventoryId = selectedInventoryIds[0];
                     const rawInventory = await rpgmanager.getInventory(i.user.id);
                     const itemInstance = rawInventory.find(item => item.item_id.toString() === selectedInventoryId);
 
@@ -205,7 +245,7 @@ module.exports = {
                         await rpgmanager.updateStats(i.user.id, newHealth, newStamina);
                         await rpgmanager.removeItem(itemInstance.id);
 
-                        selectedInventoryId = null;
+                        selectedInventoryIds = [];
                         await i.reply({ content: `You used **${itemData.name}**!`, ephemeral: true });
                     } else if (i.customId === 'inv_equip' && primaryType === 'equippable') {
                         const res = await rpgmanager.equipItem(i.user.id, itemData.id);

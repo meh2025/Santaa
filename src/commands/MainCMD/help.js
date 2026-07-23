@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const packageInfo = require('../../../package.json');
 require('dotenv').config();
-const { getMenuRow, getPaginationRow, getOptions } = require('../Utils/NavigateManager');
+const { getMenuRow, getPaginationRow, getOptions, applySelectMenuDefaults } = require('../Utils/NavigateManager');
 
 module.exports = {
     name: 'help',
@@ -41,15 +41,15 @@ module.exports = {
 
         let currentPage = 0;
         const itemsPerPage = 5;
-        let currentCategory = '';
+        let currentCategories = [];
         const isOwner = message.author.id === process.env.OWNER_ID;
 
         // Filter commands based on category and ownership
-        const getFilteredCmds = (cat) => {
+        const getFilteredCmds = (categories) => {
             return commands.filter(cmd => {
                 if (!isOwner && cmd.category === 'owner') return false;
-                if (cat === 'all') return true;
-                return cmd.category === cat;
+                if (categories.includes('all')) return true;
+                return categories.includes(cmd.category);
             });
         };
 
@@ -63,9 +63,12 @@ module.exports = {
         const menuOptions = isOwner
             ? [...getOptions(), { label: 'Owner', value: 'owner', emoji: '👑' }]
             : getOptions();
-        const menuRow = getMenuRow('help_slt', menuOptions);
+        const maxVals = Math.max(1, menuOptions.length - 1);
+        const menuRow = getMenuRow('help_slt', menuOptions, maxVals, 0);
 
-        const response = await message.channel.send({ embeds: [helpEmbed], components: [menuRow] });
+        let currentMenuRow = menuRow;
+
+        const response = await message.channel.send({ embeds: [helpEmbed], components: [currentMenuRow] });
 
         // Component collector for menu and pagination
         const collector = response.createMessageComponentCollector({ time: 60000 });
@@ -76,7 +79,35 @@ module.exports = {
 
             // Handle menu selection and pagination
             if (i.isStringSelectMenu()) {
-                currentCategory = i.values[0];
+                const newSelection = i.values;
+                
+                if (newSelection.length === 0) {
+                    currentCategories = ['all'];
+                } else {
+                    const exclusives = ['all', 'gau3'];
+                    let newlySelectedExclusive = null;
+                    for (const exc of exclusives) {
+                        if (newSelection.includes(exc) && !currentCategories.includes(exc)) {
+                            newlySelectedExclusive = exc;
+                            break;
+                        }
+                    }
+
+                    if (newlySelectedExclusive) {
+                        currentCategories = [newlySelectedExclusive];
+                    } else {
+                        const hasOthers = newSelection.some(v => !exclusives.includes(v));
+                        if (hasOthers) {
+                            currentCategories = newSelection.filter(v => !exclusives.includes(v));
+                        } else {
+                            currentCategories = newSelection;
+                        }
+                    }
+                }
+
+                if (currentCategories.length === 0) {
+                    currentCategories = ['all'];
+                }
                 currentPage = 0;
             } else if (i.isButton()) {
                 switch (i.customId) {
@@ -86,23 +117,27 @@ module.exports = {
                     case 'first': currentPage = 0; break;
                     case 'last': {
                         // Calculate total pages based on current category
-                        const totalItems = getFilteredCmds(currentCategory).size;
+                        const totalItems = getFilteredCmds(currentCategories).size;
                         currentPage = Math.max(0, Math.ceil(totalItems / itemsPerPage) - 1); // Set to last page index
                         break;
                     }
                 }
             }
 
+            // Rebuild the menu row to retain the selected visual state
+            const updatedOptions = applySelectMenuDefaults(menuOptions, currentCategories);
+            currentMenuRow = getMenuRow('help_slt', updatedOptions, maxVals, 0);
+
             // dont care ts
-            if (currentCategory === 'gau3') {
+            if (currentCategories.includes('gau3')) {
                 return i.update({
                     embeds: [new EmbedBuilder().setTitle('❓ Hidden Area').setDescription('You bastard! You just into owner\'s bot bedroom 🤨')],
-                    components: [menuRow]
+                    components: [currentMenuRow]
                 });
             }
 
             // Get category commands and paginate
-            const filteredArray = Array.from(getFilteredCmds(currentCategory).values());
+            const filteredArray = Array.from(getFilteredCmds(currentCategories).values());
             const totalPages = Math.ceil(filteredArray.length / itemsPerPage);
 
             // Pagination logic
@@ -127,14 +162,14 @@ module.exports = {
             const btnRow = getPaginationRow(currentPage, totalPages);
 
             // Menu page
-            const components = filteredArray.length > itemsPerPage ? [menuRow, btnRow] : [menuRow];
+            const components = filteredArray.length > itemsPerPage ? [currentMenuRow, btnRow] : [currentMenuRow];
 
             await i.update({ embeds: [pageEmbed], components: components });
         });
 
         collector.on('end', () => {
-            menuRow.components[0].setDisabled(true);
-            response.edit({ components: [menuRow] }).catch(() => { });
+            currentMenuRow.components[0].setDisabled(true);
+            response.edit({ components: [currentMenuRow] }).catch(() => { });
         });
     },
 };
