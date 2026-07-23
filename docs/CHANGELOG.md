@@ -14,7 +14,7 @@ v1.1.1-alpha.5
 - Upgrade select options, UI for some commands
 - Remove version and type in .env, emoji in help commands
 
-Alpha release: [7519dde](https://github.com/sn00bol/Santaa/commit/7519dde3e5dd81a9f77eb0677d73a6fa38dbe45f), [540afa3](https://github.com/sn00bol/Santaa/commit/540afa3058123ce03396dba54d7994a7f6a77264), [68aea7d](https://github.com/sn00bol/Santaa/commit/68aea7df00845685bddff83bc8560c9efe3e912b), [dacfc47](https://github.com/sn00bol/Santaa/commit/dacfc47b4203b17c1b1ded4301bb9a836fb0d0d0), [17ecb5d](https://github.com/sn00bol/Santaa/commit/17ecb5d4190445bb6eabefd1a08dff58dc82d12f)
+Alpha release: [7519dde](https://github.com/sn00bol/Santaa/commit/7519dde3e5dd81a9f77eb0677d73a6fa38dbe45f), [540afa3](https://github.com/sn00bol/Santaa/commit/540afa3058123ce03396dba54d7994a7f6a77264), [68aea7d](https://github.com/sn00bol/Santaa/commit/68aea7df00845685bddff83bc8560c9efe3e912b), [dacfc47](https://github.com/sn00bol/Santaa/commit/dacfc47b4203b17c1b1ded4301bb9a836fb0d0d0), [17ecb5d](https://github.com/sn00bol/Santaa/commit/17ecb5d4190445bb6eabefd1a08dff58dc82d12f), [597f925](https://github.com/sn00bol/Santaa/commit/597f925109b8f1b62659c043cdc0db85fbfe7c55)
 
 Beta release:
 
