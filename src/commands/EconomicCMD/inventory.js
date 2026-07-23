@@ -1,7 +1,9 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const rpgmanager = require('../../../database/rpgmanager');
+const dbmanager = require('../../../database/dbmanager');
 const { getPaginationRow } = require('../Utils/NavigateManager');
 const { getTotalStats, allItemsCache } = require('../Utils/StatsCalculator');
+const { executeSell } = require('./sell');
 
 module.exports = {
     name: 'inventory',
@@ -41,7 +43,7 @@ module.exports = {
             desc += `**Stamina:** ${userStats.stamina} / ${userStats.maxStamina}\n`;
             desc += `**Attack:** ${userStats.totalAttack}\n`;
             desc += `**Equipped:** ${userStats.equippedItemName || 'None'}\n`;
-            
+
             const stats = await rpgmanager.getStats(message.author.id);
             const wantedLevel = Math.floor((stats.wanted_level || 0) / 5);
             const stars = wantedLevel > 0 ? '⭐'.repeat(wantedLevel) : '0';
@@ -91,9 +93,11 @@ module.exports = {
                     const itemData = allItems.get(selectedInvItem.item_id);
                     if (itemData) {
                         const btnRow = new ActionRowBuilder();
-                        if (itemData.type === 'consumable') {
+                        // Resolve primary type (supports both string and array)
+                        const primaryType = Array.isArray(itemData.type) ? itemData.type[0] : itemData.type;
+                        if (primaryType === 'consumable') {
                             btnRow.addComponents(new ButtonBuilder().setCustomId('inv_use').setLabel('Use').setStyle(ButtonStyle.Success));
-                        } else if (itemData.type === 'equippable') {
+                        } else if (primaryType === 'equippable') {
                             // determine if this item_id is among equipped items
                             const equippedArr = userStats.equippedItemsArr || [];
                             const isEquipped = equippedArr.includes(selectedInvItem.item_id);
@@ -108,7 +112,9 @@ module.exports = {
                                     .setLabel('Equip')
                                     .setStyle(ButtonStyle.Primary));
                             }
-                        } else if (itemData.type === 'sellable') {
+                        }
+                        // Show Sell button for any item that is_sellable
+                        if (itemData.is_sellable === true) {
                             btnRow.addComponents(new ButtonBuilder().setCustomId('inv_sell').setLabel('Sell').setStyle(ButtonStyle.Danger));
                         }
                         if (btnRow.components.length > 0) components.push(btnRow);
@@ -152,7 +158,28 @@ module.exports = {
                     return;
                 }
 
-                    if (i.customId === 'inv_use' || i.customId === 'inv_equip' || i.customId === 'inv_unequip') {
+                // ── Sell button (separate branch — must deferReply before any async work) ──
+                if (i.customId === 'inv_sell') {
+                    if (!selectedInventoryId) return i.reply({ content: 'Select an item first!', ephemeral: true });
+                    const itemData = allItems.get(selectedInventoryId);
+                    if (!itemData) return i.reply({ content: 'Invalid item data!', ephemeral: true });
+
+                    // Acknowledge immediately — DB ops below can take >3s
+                    await i.deferReply({ ephemeral: true });
+
+                    await executeSell(
+                        i.user.id,
+                        itemData,
+                        1,
+                        (content) => i.editReply(typeof content === 'string' ? { content } : content)
+                    );
+                    selectedInventoryId = null;
+                    await response.edit(await generateEmbedAndComponents(currentPage));
+                    return;
+                }
+
+                // ── Use / Equip / Unequip buttons ──
+                if (i.customId === 'inv_use' || i.customId === 'inv_equip' || i.customId === 'inv_unequip') {
                     const rawInventory = await rpgmanager.getInventory(i.user.id);
                     const itemInstance = rawInventory.find(item => item.item_id.toString() === selectedInventoryId);
 
@@ -163,7 +190,10 @@ module.exports = {
 
                     let userStats = await rpgmanager.getStats(i.user.id);
 
-                    if (i.customId === 'inv_use' && itemData.type === 'consumable') {
+                    // Resolve primary type (supports both string and array)
+                    const primaryType = Array.isArray(itemData.type) ? itemData.type[0] : itemData.type;
+
+                    if (i.customId === 'inv_use' && primaryType === 'consumable') {
                         const fullStats = await getTotalStats(i.user.id);
 
                         let newHealth = userStats.health;
@@ -177,34 +207,19 @@ module.exports = {
 
                         selectedInventoryId = null;
                         await i.reply({ content: `You used **${itemData.name}**!`, ephemeral: true });
-                    } else if (i.customId === 'inv_equip' && itemData.type === 'equippable') {
+                    } else if (i.customId === 'inv_equip' && primaryType === 'equippable') {
                         const res = await rpgmanager.equipItem(i.user.id, itemData.id);
                         if (res && res.changed === false && res.reason === 'limit') {
                             return i.reply({ content: 'You can only equip up to 3 items. Unequip one first.', ephemeral: true });
                         }
                         await i.reply({ content: `You equipped **${itemData.name}**!`, ephemeral: true });
-                    } else if (i.customId === 'inv_unequip' && itemData.type === 'equippable') {
+                    } else if (i.customId === 'inv_unequip' && primaryType === 'equippable') {
                         const res = await rpgmanager.unequipItem(i.user.id, itemData.id);
                         if (res && res.changed) {
                             await i.reply({ content: `You unequipped **${itemData.name}**!`, ephemeral: true });
                         } else {
                             await i.reply({ content: `Item was not equipped.`, ephemeral: true });
                         }
-                    } else if (i.customId === 'inv_sell' && itemData.type === 'sellable') {
-                        const userStats = await rpgmanager.getStats(i.user.id);
-                        const userInventory = await rpgmanager.getInventory(i.user.id);
-                        const itemInstance = userInventory.find(item => item.item_id.toString() === selectedInventoryId);
-                        if (userStats.equipped_items) {
-                            try {
-                                const eqArr = JSON.parse(userStats.equipped_items || '[]');
-                                if (eqArr.includes(itemData.id)) {
-                                    await rpgmanager.unequipItem(i.user.id, itemData.id);
-                                }
-                            } catch (e) { }
-                        }
-                        await rpgmanager.removeItem(itemInstance.id);
-                        // Selling does not change base health/stamina fields here
-                        await i.reply({ content: `You sold **${itemData.name}**!`, ephemeral: true });
                     }
 
                     await response.edit(await generateEmbedAndComponents(currentPage));

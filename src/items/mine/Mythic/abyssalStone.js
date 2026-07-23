@@ -3,5 +3,7 @@ module.exports = {
     name: 'Abyssal Stone',
     sell: 4800,
     desc: 'Stone from the deepest abyss.',
-    type: 'sellable',
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

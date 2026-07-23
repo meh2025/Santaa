@@ -3,5 +3,7 @@ module.exports = {
     name: 'Clown Fish',
     sell: 30,
     desc: 'I know it! it from finding Jesus!',
-    type: 'sellable',
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

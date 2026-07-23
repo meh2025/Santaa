@@ -3,5 +3,7 @@ module.exports = {
     name: 'Platinum',
     sell: 200,
     desc: 'Rare platinum ore.',
-    type: 'sellable',
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

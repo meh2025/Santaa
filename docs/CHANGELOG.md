@@ -1,18 +1,21 @@
-# v1.1.1-alpha.2.260720
+v1.1.1-alpha.3
+- Add basic selling system
+- Fix sell button on inventory which is not working
+- Add 4 sell type: SELLABLE, UNSELLABLE, UNTRADEABLE-SELLABLE/UNSELLABLE
+
+# CHANGELOG
+# v1.1.1 - 7.2x.2026
 - Add help command search
 - Minor upgrade crime command
 - Add wanted level (affect to economy command and minigame)
-
-# v1.1.1-alpha.1.260719
 - Move all item (including from shop, fish, mine) to a single folder to easy managing
 - Automatic create bosses_memory if it dont exists
 - Updating some stuff on changelog
-
-# v1.1.1-alpha.0.260718
 - Remove version and type in .env
-- Just create a new tree
 
-# CHANGELOG
+Alpha release: [7519dde](https://github.com/sn00bol/Santaa/commit/7519dde3e5dd81a9f77eb0677d73a6fa38dbe45f), [540afa3](https://github.com/sn00bol/Santaa/commit/540afa3058123ce03396dba54d7994a7f6a77264), [68aea7d](https://github.com/sn00bol/Santaa/commit/68aea7df00845685bddff83bc8560c9efe3e912b)
+
+Beta release:
 
 # v1.1.0 - 7.18.2026
 - Adding more jobs

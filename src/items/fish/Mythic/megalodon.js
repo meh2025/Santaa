@@ -3,5 +3,7 @@ module.exports = {
     name: 'Megalodon',
     sell: 1000,
     desc: 'The ancient of shark, true predator of the deep',
-    type: 'sellable'
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

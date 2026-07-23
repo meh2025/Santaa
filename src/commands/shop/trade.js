@@ -210,11 +210,19 @@ module.exports = {
 
             // Build message components
             const buildComponents = () => {
-                // Available items = inventory minus already offered
+                // Available items = inventory minus already offered and minus untradeable items
                 const offeredIdsA = new Set(offerA.map(it => it.id));
                 const offeredIdsB = new Set(offerB.map(it => it.id));
-                const availA = invA.filter(it => !offeredIdsA.has(it.id));
-                const availB = invB.filter(it => !offeredIdsB.has(it.id));
+                const availA = invA.filter(it => {
+                    if (offeredIdsA.has(it.id)) return false;
+                    const itemDef = allItems.get(it.item_id);
+                    return !itemDef || itemDef.is_tradeable !== false;
+                });
+                const availB = invB.filter(it => {
+                    if (offeredIdsB.has(it.id)) return false;
+                    const itemDef = allItems.get(it.item_id);
+                    return !itemDef || itemDef.is_tradeable !== false;
+                });
 
                 // Clamp pages
                 const totalPagesA = Math.max(1, Math.ceil(availA.length / ITEMS_PER_PAGE));
@@ -334,6 +342,12 @@ module.exports = {
                         const item = inv.find(it => it.id.toString() === pending && !offeredIds.has(it.id));
                         if (!item)
                             return i.reply({ content: '⚠️ Item not available!', ephemeral: true });
+
+                        // Check if item is tradeable
+                        const itemDataCheck = allItems.get(item.item_id);
+                        if (itemDataCheck && itemDataCheck.is_tradeable === false) {
+                            return i.reply({ content: '🔒 Vật phẩm này bị khóa (untradeable), không thể giao dịch!', ephemeral: true });
+                        }
 
                         offer.push(item);
                         if (side === 'A') { selectedA = null; readyA = false; }

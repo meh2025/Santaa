@@ -3,5 +3,7 @@ module.exports = {
     name: 'Copper',
     sell: 30,
     desc: 'Reddish copper ore.',
-    type: 'sellable',
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

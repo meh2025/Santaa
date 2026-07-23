@@ -3,5 +3,7 @@ module.exports = {
     name: 'Kraken',
     sell: 920,
     desc: 'The legendary sea monster, feare by a lot of sailor',
-    type: 'sellable'
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

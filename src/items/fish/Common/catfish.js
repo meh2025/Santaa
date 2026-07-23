@@ -3,5 +3,7 @@ module.exports = {
     name: 'Cat Fish',
     sell: 20,
     desc: 'Some fish you could easily found',
-    type: 'sellable',
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

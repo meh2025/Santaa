@@ -3,5 +3,7 @@ module.exports = {
     name: 'Darksteel',
     sell: 1300,
     desc: 'The shadows so dark, like black hole',
-    type: 'sellable',
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

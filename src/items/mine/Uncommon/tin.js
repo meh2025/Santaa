@@ -3,5 +3,7 @@ module.exports = {
     name: 'Tin',
     sell: 32,
     desc: 'Soft tin ore.',
-    type: 'sellable',
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };

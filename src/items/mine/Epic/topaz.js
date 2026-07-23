@@ -3,5 +3,7 @@ module.exports = {
     name: 'Topaz',
     sell: 380,
     desc: 'Topaz is a silicate mineral, well not epic at all',
-    type: 'sellable',
+    type: ['sellable'],
+    is_sellable: true,
+    is_tradeable: true
 };
